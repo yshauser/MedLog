@@ -1,0 +1,43 @@
+[
+  {
+    "families": [
+      {
+        "id": "1111",
+        "name": "Admin Family",
+        "ownerId": "admin"
+      },
+      {
+        "id": "1739389481650",
+        "name": "האוזר",
+        "ownerId": "yh"
+      }
+    ],
+    "users": [
+      {
+        "username": "admin",
+        "role": "admin",
+        "familyId": "1111"
+      },
+      {
+        "username": "yh",
+        "role": "owner",
+        "familyId": "1739389481650"
+      },
+      {
+        "username": "bin",
+        "role": "user",
+        "familyId": "1739389481650"
+      },
+      {
+        "username": "a",
+        "role": "admin",
+        "familyId": "1111"
+      },
+      {
+        "username": "b",
+        "role": "owner",
+        "familyId": "1739403823603"
+      }
+    ]
+  }
+]
