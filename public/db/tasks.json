@@ -213,7 +213,82 @@
         "takes": [
           true
         ]
+      },
+      {
+        "date": "2025-02-20",
+        "takes": [
+          true
+        ]
+      },
+      {
+        "date": "2025-02-22",
+        "takes": [
+          true
+        ]
+      },
+      {
+        "date": "2025-02-23",
+        "takes": [
+          true
+        ]
+      },
+      {
+        "date": "2025-02-24",
+        "takes": [
+          true
+        ]
+      },
+      {
+        "date": "2025-02-25",
+        "takes": [
+          true
+        ]
+      },
+      {
+        "date": "2025-02-26",
+        "takes": [
+          true
+        ]
+      },
+      {
+        "date": "2025-02-27",
+        "takes": [
+          true
+        ]
+      },
+      {
+        "date": "2025-03-01",
+        "takes": [
+          true
+        ]
+      },
+      {
+        "date": "2025-02-28",
+        "takes": [
+          true
+        ]
+      },
+      {
+        "date": "2025-03-02",
+        "takes": [
+          true
+        ]
       }
     ]
+  },
+  {
+    "id": "1741020725163",
+    "taskUser": "יוסי",
+    "taskLabel": "אנטי דלקתי לכאב ביד",
+    "taskStartDate": "03/03/2025",
+    "taskEndDate": "09/03/2025",
+    "taskDays": 7,
+    "timesPerDay": 1,
+    "timeInDay": "ערב",
+    "dose": 1,
+    "doseUnits": "כדור",
+    "medicine": "בטרן",
+    "withFood": "עם או אחרי האוכל",
+    "comment": ""
   }
 ]

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TaskEntry, DailyTakes } from '../../types';
-import { formatDateForCalc } from '../../services/TaskManager';
+import { timeAndDateFormatter } from '../../services/uiUtils';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -99,7 +99,7 @@ const TaskCalendar: React.FC<CalendarProps> = ({ task, onClose, onUpdateTask }) 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState<string>('');
 
-  const startDate = new Date(formatDateForCalc(task.taskStartDate));
+  const startDate = new Date(timeAndDateFormatter.formatDateForCalc(task.taskStartDate));
   const endDate = new Date(startDate);
   endDate.setDate(startDate.getDate() + (task.taskDays)); // Subtract 1 to include start date
     // console.log ('start/end', startDate,endDate);

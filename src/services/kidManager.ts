@@ -71,6 +71,13 @@ export const calculateAge = (birthDate: string): number => {
   if (age >= 2) {
     if (monthsAfterBirthday >= 9) {
       roundedAge = age + 1;
+    } else if (monthsAfterBirthday == 0){
+      if (day > today.getDate()){
+        roundedAge = age+1;
+      }
+      else {
+        roundedAge = age;
+      }
     } else if (monthsAfterBirthday <= 3) {
       roundedAge = age;
     } else {
@@ -79,6 +86,7 @@ export const calculateAge = (birthDate: string): number => {
   } else if (age < 2) {
     roundedAge = monthsAfterBirthday;
   }
+  // console.log ('calculateAge', {birthDate, age, roundedAge, monthsAfterBirthday})
   return roundedAge;
 };
 

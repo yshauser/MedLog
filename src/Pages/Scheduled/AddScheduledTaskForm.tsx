@@ -1,4 +1,4 @@
-import React , {useState, useEffect, SyntheticEvent} from 'react';
+import React , {useState, useEffect, SyntheticEvent, useCallback} from 'react';
 import { TaskEntry, TreatmentType, Frequency } from '../../types';
 import {CalendarIcon} from 'lucide-react';
 import DatePicker from 'react-datepicker';
@@ -61,7 +61,7 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
         setTreatmentType('סבב טיפול');
       }
     }
-  }, [formData.taskDays]);
+  }, [formData.taskDays, setTreatmentType, setFrequency]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center overflow-y-auto">
@@ -146,6 +146,7 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
                 <DatePicker
                 selected={formData.taskStartDate ? new Date(formData.taskStartDate.split('/').reverse().join('-')) : null}
                 onChange={(date: Date | null, event?: SyntheticEvent<any, Event>) => {
+                  const handleDateChange = useCallback((date: Date | null) => {
                     if (date) {
                     const day = date.getDate().toString().padStart(2, '0');
                     const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -153,6 +154,7 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
                     const formattedDate = `${day}/${month}/${year}`;
                     onTaskDataChange({ ...formData, taskStartDate: formattedDate });
                     }
+                  }, [formData, onTaskDataChange]);
                 }}
                 dateFormat="dd/MM/yyyy"
                 className="w-full p-2 border rounded pl-10"
