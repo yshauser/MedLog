@@ -8,8 +8,9 @@ import AddKidForm from './AddKidForm';
 
 
 export const KidsPage = () => {
-  const {user} = useAuth(); // Get the logged-in user
+  const {user, getCurrentUserFamily} = useAuth(); // Get the logged-in user
   const [kids, setKids] = useState<Kid[]>([]);
+  const [filteredKids, setFilteredKids] = useState<Kid[]>([]);
   const [newKid, setNewKid] = useState<Partial<Kid>>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -19,11 +20,38 @@ export const KidsPage = () => {
   const [kidToDelete, setKidToDelete] = useState<string | null>(null);
   
 
+  // Filter kids based on user's family
+  const filterKidsForCurrentUser = (kidsData: Kid[]) => {
+    if (!user) {
+      setFilteredKids([]);
+      return;
+    }
+    
+    if (user.role === 'admin' ) {
+      // Admins see all kids - for owners to see all -> add this to the if: || user.role === 'owner'
+      setFilteredKids(kidsData);
+    } else {
+      // Regular users only see kids from their family
+      const userFamily = getCurrentUserFamily();
+      if (userFamily) {
+        const familyKids = kidsData.filter(kid => kid.familyId === userFamily.id);
+        setFilteredKids(familyKids);
+        console.log ('filtered kids', {familyKids, userFamily, kidsData});
+      } else {
+        setFilteredKids([]);
+      }
+    }
+  };
+  
   const saveKid = async () => {
     const lastUpdated = new Date();
     const formattedDate = `${lastUpdated.getDate().toString().padStart(2, '0')}/${
       (lastUpdated.getMonth() + 1).toString().padStart(2, '0')
     }/${lastUpdated.getFullYear()}`;
+
+    const userFamily = getCurrentUserFamily();
+    const familyId = userFamily ? userFamily.id : '';
+    const familyName = userFamily ? userFamily.name : '';
 
     const sanitizedBirthDate = newKid.birthDate 
     ? newKid.birthDate.replace(/\./g, "/") // Replace dots with slashes
@@ -34,6 +62,8 @@ export const KidsPage = () => {
       id: editKidId || Date.now().toString(),
       birthDate: sanitizedBirthDate ? updateDateYearTo4digits(sanitizedBirthDate) : "", // Handle undefined case
       lastUpdated: formattedDate,
+      family: newKid.family || familyName, // Set family to current user's family if not specified
+      familyId: newKid.familyId || familyId, // Set family to current user's family if not specified
     };
   
     try {
@@ -56,9 +86,13 @@ export const KidsPage = () => {
     };
 
     if (isEditMode) {
-      setKids(kids.map(kid => (kid.id === editKidId ? updatedKidData as Kid : kid)));
+      const updatedKids = kids.map(kid => (kid.id === editKidId ? updatedKidData as Kid : kid));
+      setKids (updatedKids);
+      filterKidsForCurrentUser(updatedKids);
     } else {
-      setKids([...kids, updatedKidData as Kid]);
+      const updatedKids = [...kids, updatedKidData as Kid];
+      setKids(updatedKids);
+      filterKidsForCurrentUser(updatedKids);
     }
     handleCloseModal();
     } catch (error) {
@@ -95,7 +129,8 @@ export const KidsPage = () => {
           type: 'kids',
         })
       });
-      setKids(kids.filter(kid => kid.id !== id));
+      setKids(updatedKidData);
+      filterKidsForCurrentUser (updatedKidData);
     } catch (error) {
       console.error('Error deleting kid:', error);
     }
@@ -104,11 +139,32 @@ export const KidsPage = () => {
   const onDragEnd = async (result: any) => {
     if (!result.destination) return;
 
-    const reorderedKids = Array.from(kids);
-    const [movedKid] = reorderedKids.splice(result.source.index, 1);
-    reorderedKids.splice(result.destination.index, 0, movedKid);
-    console.log ('onDragEnd reorderedKids', {reorderedKids});
+    const itemsToReorder = user?.role === 'admin' || user?.role === 'owner' 
+    ? [...kids]
+    : [...filteredKids];
+
+    // const reorderedKids = Array.from(kids);
+    const [movedKid] = itemsToReorder.splice(result.source.index, 1);
+    itemsToReorder.splice(result.destination.index, 0, movedKid);
+    console.log ('onDragEnd reorderedKids', {itemsToReorder});
     
+    // If we're reordering filtered kids, we need to merge the changes back into the full list
+    let reorderedKids = [...kids];
+    if (user?.role !== 'admin' && user?.role !== 'owner') {
+      // Create a map of the original positions
+      const kidMap = new Map(kids.map(kid => [kid.id, kid]));
+      
+      // Update the map with the new order for the filtered items
+      itemsToReorder.forEach(kid => {
+        kidMap.set(kid.id, kid);
+      });
+      
+      // Convert back to array
+      reorderedKids = Array.from(kidMap.values());
+    } else {
+      reorderedKids = itemsToReorder;
+    }
+
     try {
       await fetch ('/api/saveToJsonFile',{
         method: 'POST',
@@ -120,6 +176,7 @@ export const KidsPage = () => {
         }),
       });
       setKids(reorderedKids);
+      filterKidsForCurrentUser(reorderedKids);
       console.log ('Order saved successfully');
     } catch (error) {
       console.error('Error saving kids order:', error);
@@ -141,9 +198,10 @@ export const KidsPage = () => {
       const loadedKids = await KidManager.loadKids();
       console.log ('Page-kids use effect loaded kids', {loadedKids});
       setKids(loadedKids);
+      filterKidsForCurrentUser(loadedKids);
     };
     fetchKids().catch(error => console.error('Error in useEffect fetchKids:', error));
-  }, []);
+  }, [user]);
   
 
   return (
@@ -161,6 +219,7 @@ export const KidsPage = () => {
         isOpen={isModalOpen}
         isEditMode={isEditMode}
         kidData={newKid}
+        userRole={user?.role || null}
         onClose={handleCloseModal}
         onSave={saveKid}
         onKidDataChange={setNewKid}
@@ -173,8 +232,8 @@ export const KidsPage = () => {
               ref={provided.innerRef}
               className="space-y-4"
             >
-            {kids && kids.length > 0 ? (
-              kids.map((kid: Kid, index: number) => (
+            {filteredKids && filteredKids.length > 0 ? (
+              filteredKids.map((kid: Kid, index: number) => (
                 <Draggable 
                   key={kid.id || `kid-${index}`}
                   draggableId={kid.id ? kid.id.toString(): `kid-${index}`} 
@@ -195,7 +254,7 @@ export const KidsPage = () => {
                           {user?.role === 'admin' || user?.role === 'owner' ? (    
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => editKid(kid)}
+                            onClick={(e) =>{e.stopPropagation(); editKid(kid);}}
                             className="hover:bg-gray-100 p-1 rounded-full transition-colors"
                             >
                             {/* ערוך */}
@@ -230,6 +289,10 @@ export const KidsPage = () => {
                           <p className={KidManager.checkLastUpdatedStatus(kid.age, kid.lastUpdated).color}>
                             עודכן לאחרונה: {kid.lastUpdated}
                           </p>
+                        {user?.role === 'admin' ? (
+                          <p>משפחה: {kid.family}</p>
+                          // <p>משפחה: {getCurrentUserFamily()?.name || kid.family}</p>
+                        ) : null}
                         </div>
                       )}
 

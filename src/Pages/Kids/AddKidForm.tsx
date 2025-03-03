@@ -1,10 +1,12 @@
 import React from 'react';
 import { Kid } from '../../types.ts';
+import { useAuth } from '../../Users/AuthContext';
 
 interface AddKidFormProps {
   isOpen: boolean;
   isEditMode: boolean;
   kidData: Partial<Kid>;
+  userRole: string | null;
   onClose: () => void;
   onSave: (kidData: Partial<Kid>) => Promise<void>;
   onKidDataChange: (data: Partial<Kid>) => void;
@@ -14,11 +16,16 @@ export const AddKidForm: React.FC<AddKidFormProps> = ({
   isOpen,
   isEditMode,
   kidData,
+  userRole,
   onClose,
   onSave,
   onKidDataChange,
 }) => {
   if (!isOpen) return null;
+  const {user, getCurrentUserFamily} = useAuth(); // Get the logged-in user
+  const families = useAuth().families;
+  console.log ('add kid', {families, user})
+  
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -58,6 +65,20 @@ export const AddKidForm: React.FC<AddKidFormProps> = ({
             value={kidData.favoriteMedicine || ''}
             onChange={e => onKidDataChange({ ...kidData, favoriteMedicine: e.target.value })}
           />
+          {user?.role === 'admin' && (
+            <select
+            value={kidData.familyId}
+            onChange={(e) => onKidDataChange({ ...kidData, familyId: e.target.value })}
+            className="w-full p-2 border rounded"
+          >
+            <option value="">בחר משפחה</option>
+            {families.map(family => (
+              <option key={`family-${family.id}`} value={family.id}>
+                {family.name}
+              </option>
+            ))}
+          </select>
+          )}
           <div className="flex justify-end space-x-2">
             <button
               onClick={onClose}
@@ -66,8 +87,11 @@ export const AddKidForm: React.FC<AddKidFormProps> = ({
               ביטול
             </button>
             <button
-              onClick={() => onSave(kidData)}
-              className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700"
+              onClick={() => {kidData.familyId = getCurrentUserFamily()?.id; onSave(kidData)}}
+              className="px-4 py-2 bg-emerald-600 text-white rounded
+                        hover:bg-emerald-700
+                        disabled:bg-gray-400 disabled:text-gray-200 disabled:cursor-not-allowed"
+              disabled={user?.role === 'admin' && !kidData.familyId} // Disable if admin and familyId is missing
             >
               שמור
             </button>

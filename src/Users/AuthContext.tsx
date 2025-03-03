@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import rawUsersData  from './users.json';
+// import { parseDate } from 'react-datepicker/dist/date_utils';
 
 interface UserData {
   username: string;
@@ -54,16 +55,20 @@ const validateFamilyData = (family: any): family is FamilyData => {
     typeof family.name === 'string' &&
     typeof family.ownerId === 'string' &&
     Array.isArray(family.users) &&
-    family.users.every(validateUserData)
+    (!family.users || (Array.isArray(family.users) && family.users.every(validateUserData)))
   );
 };
 
-// Convert the imported data to the correct type
-const usersData: FamilyData[] = Array.isArray(rawUsersData) 
-  ? rawUsersData.filter(validateFamilyData)
-  : [];
+
+  const parsedData = typeof rawUsersData === 'string' ? JSON.parse(rawUsersData) : rawUsersData;
+  const usersData: FamilyData[] = parsedData?.families && Array.isArray(parsedData.families)
+    ? parsedData.families.filter(validateFamilyData)
+    : [];
+  console.log ('Auto load users', {rawUsersData, usersData, parsedData});
+  
 
 const processInitialData = (data: FamilyData[]) => {
+  console.log ('processInitialData', {data});
   const processedFamilies: Family[] = [];
   const processedUsers: User[] = [];
 
@@ -76,12 +81,14 @@ const processInitialData = (data: FamilyData[]) => {
     });
 
     // Add users with their family ID
-    family.users.forEach((user) => {
-      processedUsers.push({
-        ...user,
-        familyId: family.id
+    if (Array.isArray(family.users)){
+      family.users.forEach((user) => {
+        processedUsers.push({
+          ...user,
+          familyId: family.id
+        });
       });
-    });
+    }
   });
 
   return { families: processedFamilies, users: processedUsers };
@@ -98,9 +105,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(()=> {
     if (!initialized){
       try {
-        const storedData = localStorage.getItem('familyData');
-        if (!storedData){
-          // If no stored data, process the JSON file data
           const {families: processedFamilies, users: processedUsers} = processInitialData(usersData);
           setFamilies(processedFamilies);
           setUsers(processedUsers);
@@ -110,12 +114,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             families: processedFamilies,
             users: processedUsers
           }));
-        }else{
-          // Load from localStorage
-          const { families: storedFamilies, users: storedUsers } = JSON.parse(storedData);
-          setFamilies(storedFamilies);
-          setUsers(storedUsers);
-        }
+          console.log ('initialized', {processedFamilies, processedUsers});
+
         // Try to restore last logged in user
         const lastUser = localStorage.getItem('lastUser');
         if (lastUser) {
@@ -137,6 +137,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (initialized) {
       localStorage.setItem('familyData', JSON.stringify({ families, users }));
+          // const saveUsers = async () => {
+          //   await saveToFile(families, users);
+          //   console.log ('users page use effect save users', {families, users});
+          // };
+          // saveUsers().catch(error => console.error('Error in useEffect save users:', error));
     }
   }, [families, users, initialized]);
 
@@ -150,9 +155,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   
   const getUserFamily = (username: string) => {
     const userRecord = users.find(u => u.username === username);
-    console.log ('getUserFamily', {username, userRecord})
+    // console.log ('getUserFamily', {username, userRecord})
     if (userRecord) {
-      return families.find(f => f.id === userRecord.familyId);
+       const family = families.find(f => f.id === userRecord.familyId);
+       return (family);
     }
     return undefined;
   };
@@ -184,26 +190,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addUser = async (newUser: Omit<User, 'familyId'> & { familyId?: string, familyName?: string }) => {
+    console.log ('Auth addUser start', {newUser})
     // Prevent duplicate usernames
     if (users.some(u => u.username === newUser.username)) {
       return;
-  };
+    };
 
-  let familyId = newUser.familyId;
-   
-  // If current user is owner, associate new user with owner's family
+    let familyId = newUser.familyId;
+    let updatedFamilies = [...families];
+    console.log ('Auth addUser family data', {familyId, updatedFamilies})
+
+    // If current user is owner, associate new user with owner's family
     if (user?.role === 'owner') {
       familyId = user.familyId;
+      console.log ('user is owner - set family id same as of the user');
     } 
     // If admin is creating a user and specified a new family name
     else if (user?.role === 'admin' && newUser.familyName && !familyId) {
+      console.log ('admin adds user' );
       const newFamilyId = Date.now().toString();
       const newFamily: Family = {
         id: newFamilyId,
         name: newUser.familyName,
         ownerId: newUser.role === 'owner' ? newUser.username : ''
       };
-      setFamilies([...families, newFamily]);
+      updatedFamilies = [...families, newFamily];
+      console.log ('admin creates family', {newFamily, updatedFamilies});
+      setFamilies(updatedFamilies);
       familyId = newFamilyId;
     }
 
@@ -213,10 +226,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         role: newUser.role,
         familyId: familyId
       };
+
+      // If this user is an owner and we're creating a new family, update the family's ownerId
+      if (newUser.role === 'owner' && newUser.familyName) {
+        updatedFamilies = updatedFamilies.map(f => {
+          if (f.id === familyId) {
+            return { ...f, ownerId: newUser.username };
+          }
+          return f;
+        });
+        console.log ('owner creates family', {updatedFamilies});
+        setFamilies(updatedFamilies);
+      }
+      
       const updatedUsers = [...users, userToAdd];
       setUsers([...users, userToAdd]);
+      console.log ('auth addUser end', {families, updatedFamilies, updatedUsers});
       try{
-        await saveToFile({families, users: updatedUsers});
+        await saveToFile(updatedFamilies, updatedUsers);
       }catch (error){
         setUsers(users); //rollback on error
         throw error;
@@ -224,17 +251,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const saveToFile = async (data: { families: Family[], users: User[] }) => {
-   
+  const saveToFile = async (families: Family[], users: User[] ) => {
+   console.log ('in save to file', {families, users});
     try {
+      // Build FamilyData structure
+      const familyData: FamilyData[] = families.map((family) => ({
+        id: family.id,
+        name: family.name,
+        ownerId: family.ownerId,
+        users: users
+          .filter(user => user.familyId === family.id)
+          .map(user => ({
+            username: user.username,
+            role: user.role
+        })), // Attach only matching users
+      }));
+      console.log("Formatted FamilyData:", familyData);
+
+
       const response = await fetch('/api/saveToJsonFile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          filename: 'users.json',
-          data: data,
+          filename: 'users',
+          // data: familyData.flat(),
+          data: familyData,
           type: 'users'
       }),
       });
@@ -250,7 +293,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUsers(updatedUsers);
     
     try {
-      await saveToFile({ families, users: updatedUsers });
+      await saveToFile( families, updatedUsers );
     } catch (error) {
       console.error('Error removing user:', error);
       // Rollback on error
@@ -262,7 +305,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   if (!initialized) {
     return null; // Or a loading spinner
   }
-
+  // console.log ('auth ', {user, users, families})
   return (
     <AuthContext.Provider value={{
       user, users, families,

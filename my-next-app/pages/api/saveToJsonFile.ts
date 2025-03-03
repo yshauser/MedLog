@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import fs from 'fs/promises';
 import path from 'path';
-import { group } from 'console';
+// import { group } from 'console';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   console.log ('in save tasks');
@@ -14,7 +14,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Invalid or missing data' });
   }
   
-  const DATA_FILE_PATH = path.join(process.cwd(), '..','public','db', `${filename}.json`);
+  let DATA_FILE_PATH = path.join(process.cwd(), '..','public','db', `${filename}.json`);  ;
+  if (type === 'users'){
+    DATA_FILE_PATH = path.join(process.cwd(), '..','src','users', `${filename}.json`);
+  }
   console.log ('Processing request: ', {filename, type, data});
 
     // Ensure the directory exists
@@ -65,8 +68,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         } else {
          existingData.medicines.suspension.push(data);
         }
-        await fs.writeFile(DATA_FILE_PATH, JSON.stringify(existingData, null, 2));
-        res.status(200).json({ success: true });
+        // await fs.writeFile(DATA_FILE_PATH, JSON.stringify(existingData, null, 2));
+        // res.status(200).json({ success: true });
 
       } else if (type === 'caplets') {
           console.log ('med data caplets');
@@ -84,8 +87,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         } else {
           existingData.medicines.caplets.push(data);
         }
-        await fs.writeFile(DATA_FILE_PATH, JSON.stringify(existingData, null, 2));
-        res.status(200).json({ success: true });
+        // await fs.writeFile(DATA_FILE_PATH, JSON.stringify(existingData, null, 2));
+        // res.status(200).json({ success: true });
       } else if (type === 'granules') {
         console.log ('med data granules');
         if (!existingData.medicines){
@@ -103,9 +106,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         } else {
           existingData.medicines.granules.push(data);
         }
-        await fs.writeFile(DATA_FILE_PATH, JSON.stringify(existingData, null, 2));
-        res.status(200).json({ success: true });
-                  
+        // await fs.writeFile(DATA_FILE_PATH, JSON.stringify(existingData, null, 2));
+        // res.status(200).json({ success: true });
+          
+      } else if (type === 'users') {
+        console.log ('users data', {existingData});
+        if (!existingData.families){
+          existingData.medicines = {families:[]};
+        }else if (!Array.isArray(existingData.families)){
+          existingData.families = [];
+        }
+
+        const updatedEntry = req.body.data.flat();
+        const existingIndex = existingData.families.findIndex((entry: { id: string }) => entry.id === updatedEntry.id);
+        if (existingIndex !== -1) {
+          // Overwrite the existing entry
+          console.log ('index families', {existingIndex, updatedEntry})
+          existingData.families[existingIndex] = updatedEntry;
+        } else {
+          console.log ('else', {existingIndex, updatedEntry});
+          // existingData.families.push(data);
+          existingData.families = updatedEntry;
+        }
+
       } else  {
         console.log ('type not suspension, caplets not granules', {data});
         const updatedEntry = req.body.data;
@@ -122,16 +145,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             existingData = updatedEntry;
           }else if (type === 'log'){
             existingData = updatedEntry.flat();
-        }else{
+          }else{
             // Add as a new entry
             console.log ('existingIndex', {existingIndex, updatedEntry})
             existingData.push(updatedEntry);
           }
         }
         // existingData.push(data);
-        await fs.writeFile(DATA_FILE_PATH, JSON.stringify(existingData, null, 2));
-        res.status(200).json({ success: true });
+        // await fs.writeFile(DATA_FILE_PATH, JSON.stringify(existingData, null, 2));
+        // res.status(200).json({ success: true });
       }
+    await fs.writeFile(DATA_FILE_PATH, JSON.stringify(existingData, null, 2));
+    res.status(200).json({ success: true });
     
     } catch (error) {
       console.error('Error saving data:', error);

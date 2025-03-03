@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { TaskManager, formatDateForUI, formatDateForCalc } from '../../services/TaskManager';
+import { TaskManager, calculateRemainingDays } from '../../services/TaskManager';
+import {timeAndDateFormatter} from '../../services/uiUtils';
 import { TaskEntry } from '../../types';
 import TaskCalendar from './TaskCalendar';
 import AddScheduledTaskForm from './AddScheduledTaskForm';
-import { CalendarCheck, ChevronDown, ChevronUp,Pencil, Trash } from 'lucide-react';
+import { CalendarCheck, ChevronDown, ChevronUp, Pencil, Trash } from 'lucide-react';
 
 const initialFormData = {
   taskUser: '',
@@ -19,33 +20,42 @@ const initialFormData = {
   withFood: 'לא משנה',
   comment: '',
 };
-
+type FilterOption = 'הצג משימות בתוקף' | 'הצג משימות סגורות' | 'הצג את כל המשימות';
+const FILTER_OPTIONS: Record<string, FilterOption> = {
+  ACTIVE: 'הצג משימות בתוקף',
+  CLOSED: 'הצג משימות סגורות',
+  ALL: 'הצג את כל המשימות'
+};
 
 const ScheduledPage = () => {
   const [tasks, setTasks] = useState<TaskEntry[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<string|null>(null);
   const [taskToEdit, setTaskToEdit] = useState<TaskEntry>();
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState(initialFormData);
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskEntry | null>(null);
+  const [filteredTasks, setFilteredTasks] = useState<TaskEntry[]>(tasks);
+  const [currentFilter, setCurrentFilter] = useState<FilterOption>(FILTER_OPTIONS.ACTIVE);
+
 
   const handleEditTask = (task: TaskEntry) => {
     setTaskToEdit(task);
     if (!task.doseUnits){task.doseUnits = ''}
     if (!task.withFood){task.withFood = 'לא משנה'}
     if (!task.comment){task.comment = ''}
-    const startDate = new Date(formatDateForCalc(task.taskStartDate));
+    const startDate = new Date(timeAndDateFormatter.formatDateForCalc(task.taskStartDate));
     const endDate = new Date(startDate);
     endDate.setDate(startDate.getDate() + task.taskDays);
     console.log ('handle Edit', {startDate, endDate, task, taskToEdit})
     setFormData({
       taskUser: task.taskUser,
       taskLabel: task.taskLabel,
-      taskStartDate: formatDateForUI(task.taskStartDate),
-      taskEndDate: formatDateForUI(endDate.toString()),
+      taskStartDate: timeAndDateFormatter.formatDateForUI(task.taskStartDate),
+      taskEndDate: timeAndDateFormatter.formatDateForUI(endDate.toString()),
       taskDays: task.taskDays,
       timesPerDay: task.timesPerDay,
       timeInDay: task.timeInDay,
@@ -66,6 +76,11 @@ const ScheduledPage = () => {
     };
     fetchTasks().catch(error => console.error('Error in useEffect fetchTasks:', error));
   }, []);
+
+  // Apply filter whenever tasks or filter changes
+  useEffect(() => {
+    filterTasks(currentFilter);
+  }, [tasks, currentFilter]);
 
   const saveTasksToFile = async (updatedTasks: TaskEntry[]) => {
     try {
@@ -96,11 +111,8 @@ const ScheduledPage = () => {
   };
 
   const handleDelete = async (taskId: string) => {
-    if (isDeleting) return;
-    
     try {
-      setIsDeleting(true);
-      console.log ('is delete task', {taskId, tasks});
+      console.log ('in delete task', {taskId, tasks});
       const updatedTasksData = tasks.filter(task => task.id !== taskId);
       await fetch(`/api/saveToJsonFile/`, {
         method: 'DELETE',
@@ -115,9 +127,6 @@ const ScheduledPage = () => {
       setTasks(tasks.filter(task => task.id !== taskId));
     } catch (error) {
       console.error('Error deleting task:', error);
-      // You might want to show an error notification here
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -127,12 +136,13 @@ const ScheduledPage = () => {
     setShowCalendar(true);
     setSelectedTask(task); // Set the task in state to show the calendar for that task
   };
+
   const closeCalendar = () => {
     setShowCalendar(false); // Close the calendar when the user is done
   };
 
   const handleSubmit = async () => {
-    const startDate = new Date (formatDateForCalc(formData.taskStartDate));
+    const startDate = new Date (timeAndDateFormatter.formatDateForCalc(formData.taskStartDate));
     const endDate = new Date(startDate);
     endDate.setDate(startDate.getDate() + formData.taskDays-1);
      console.log ('handle submit', {startDate, endDate}, formData.taskDays)
@@ -141,8 +151,8 @@ const ScheduledPage = () => {
       const updatedTask: TaskEntry = {
         ...formData,
         id: taskToEdit.id,
-        taskStartDate: formatDateForUI(startDate.toString()),
-        taskEndDate: formatDateForUI(endDate.toString())
+        taskStartDate: timeAndDateFormatter.formatDateForUI(startDate.toString()),
+        taskEndDate: timeAndDateFormatter.formatDateForUI(endDate.toString())
       };
       const updatedTasks = tasks.map(task => 
         task.id === taskToEdit.id ? updatedTask : task
@@ -153,8 +163,8 @@ const ScheduledPage = () => {
       const newTask: TaskEntry = {
       id: Date.now().toString(),
       ...formData,
-      taskStartDate: formatDateForUI(startDate.toString()),
-      taskEndDate: formatDateForUI(endDate.toString())
+      taskStartDate: timeAndDateFormatter.formatDateForUI(startDate.toString()),
+      taskEndDate: timeAndDateFormatter.formatDateForUI(endDate.toString())
       };
       const updatedTasks = [...tasks, newTask];
       setTasks(updatedTasks);
@@ -182,17 +192,34 @@ const ScheduledPage = () => {
     setExpandedRows(newExpandedRows);
   };
 
-  const calculateRemainingDays = (endDate: string): number => {
-  if (!endDate) return 0;
-  const [day, month, year] = endDate.split('/');
-  const end = new Date(Number(year), Number(month) - 1, Number(day));
- 
-  // Get today's date (set time to 00:00:00 to avoid inconsistencies)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const remainingDays = Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  return Math.max(0, remainingDays);
-  };
+    // Filter tasks based on selected option
+    const filterTasks = (filterOption: FilterOption) => {
+      let filtered;
+      
+      switch (filterOption) {
+        case FILTER_OPTIONS.ACTIVE:
+          filtered = tasks.filter(task => 
+            task.taskEndDate && calculateRemainingDays(task.taskEndDate) > 0
+          );
+          break;
+        case FILTER_OPTIONS.CLOSED:
+          filtered = tasks.filter(task => 
+            !task.taskEndDate || calculateRemainingDays(task.taskEndDate) <= 0
+          );
+          break;
+        case FILTER_OPTIONS.ALL:
+        default:
+          filtered = [...tasks];
+          break;
+      }
+      
+      setFilteredTasks(filtered);
+    };
+  
+    // Handle filter change
+    const handleFilterChange = (option: FilterOption) => {
+      setCurrentFilter(option);
+    };
 
   const handleTaskDataChange = (data: Partial<TaskEntry>) => {
     setFormData((prev) => ({ ...prev, ...data }));
@@ -219,7 +246,30 @@ const ScheduledPage = () => {
         onSubmit={handleSubmit}
         onTaskDataChange={handleTaskDataChange}
       />
+  
       <div className="overflow-x-auto">
+        <div className="flex flex-wrap gap-2 mb-4 justify-start">
+          {Object.values(FILTER_OPTIONS).map((option) => (
+            <button
+              key={option}
+              onClick={() => handleFilterChange(option)}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                currentFilter === option 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+
+        {/* Tasks Count */}
+        <div className="text-sm text-gray-500 mb-2">
+          סה"כ מוצגות {filteredTasks.length} משימות 
+        </div>
+
+
         <table className="min-w-full bg-white border border-gray-200">
           <thead>
             <tr className="bg-gray-50">
@@ -235,7 +285,8 @@ const ScheduledPage = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {tasks.map((task) => (
+            {filteredTasks.length > 0 ? (
+            filteredTasks.map((task) => (
               <React.Fragment key={task.id}>
                 <tr 
                   onClick={() => toggleRowExpansion(task.id)}
@@ -251,7 +302,7 @@ const ScheduledPage = () => {
                       >
                       <CalendarCheck size={16} className="text-blue-500" />
                     </button>
-                    {showCalendar && selectedTask && (
+                    {showCalendar && selectedTask && selectedTask.id === task.id && (
                       <div>
                           <h2 className="text-xl font-semibold mb-4 text-center">בחר תאריך</h2>
                           <TaskCalendar 
@@ -290,9 +341,12 @@ const ScheduledPage = () => {
                               <Pencil size={16} className="text-blue-500" />
                             </button>
                             <button 
-                              onClick={() => handleDelete(task.id)}
                               className="hover:bg-gray-100 p-1 rounded-full transition-colors"
-                              disabled={isDeleting}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setTaskToDelete(task.id);
+                                setIsDeleteModalOpen(true);
+                              }}
                               >
                               <Trash size={16} className="text-red-500" />
                             </button>
@@ -301,8 +355,8 @@ const ScheduledPage = () => {
 
                         <div>
                           <p className="font-semibold mb-2">מועדים:</p>
-                          <p>מ: {formatDateForUI(task.taskStartDate)}</p>
-                          <p>עד: {task.taskEndDate && formatDateForUI(task.taskEndDate)}</p>
+                          <p>מ: {timeAndDateFormatter.formatDateForUI(task.taskStartDate)}</p>
+                          <p>עד: {task.taskEndDate && timeAndDateFormatter.formatDateForUI(task.taskEndDate)}</p>
                           <p>סך הכל <strong>{task.taskDays}</strong> ימים</p>
                           <p>נשארו <strong>{task.taskEndDate && calculateRemainingDays(task.taskEndDate)}</strong> ימים</p>
                         </div>
@@ -324,9 +378,43 @@ const ScheduledPage = () => {
                   </tr>
                 )}
               </React.Fragment>
-            ))}
+            ))
+            ) : (
+              <tr>
+                <td colSpan={3} className="px-6 py-4 text-center text-gray-500">
+                  לא נמצאו משימות 
+                </td>
+              </tr>
+            )
+          }
           </tbody>
         </table>
+        {isDeleteModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+            <p className="text-lg font-medium">האם אתה בטוח שברצונך למחוק את הרשומה?</p>
+            <div className="mt-4 flex justify-center space-x-4 gap-2">
+              <button
+                onClick={() => {
+                  if (taskToDelete) {
+                    handleDelete(taskToDelete);
+                  }
+                  setIsDeleteModalOpen(false);
+                }}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                מחק
+              </button>
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );

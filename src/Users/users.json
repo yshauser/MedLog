@@ -1,28 +1,72 @@
-[
+{
+  "families": [
     {
-        "id": "1111",
-        "name": "Admin Family",
-        "ownerId" : "admin",
-        "users":[
-            {
-            "username": "admin",
-            "role": "admin"
-            }
-        ]
+      "id": "1111",
+      "name": "Admin Family",
+      "ownerId": "admin",
+      "users": [
+        {
+          "username": "admin",
+          "role": "admin"
+        },
+        {
+          "username": "a",
+          "role": "admin"
+        }
+      ]
     },
     {
-        "id": "1739389481650",
-        "name": "האוזר",
-        "ownerId" : "yh",
-        "users":[
-            {
-            "username": "yh",
-            "role": "owner"
-            },
-            {
-            "username": "bin",
-            "role": "user"
-            }
-        ]
-    }   
-]
+      "id": "1739389481650",
+      "name": "האוזר",
+      "ownerId": "yh",
+      "users": [
+        {
+          "username": "yh",
+          "role": "owner"
+        },
+        {
+          "username": "bin",
+          "role": "user"
+        },
+        {
+          "username": "cv",
+          "role": "owner"
+        }
+      ]
+    },
+    {
+      "id": "1740491044637",
+      "name": "Benesh",
+      "ownerId": "ariel",
+      "users": [
+        {
+          "username": "אריאל",
+          "role": "owner"
+        },
+        {
+          "username": "aas",
+          "role": "user"
+        },
+        {
+          "username": "רינת",
+          "role": "user"
+        }
+      ]
+    },
+    {
+      "id": "1740954050669",
+      "name": "Hauser",
+      "ownerId": "Yossi",
+      "users": [
+        {
+          "username": "Yossi",
+          "role": "owner"
+        },
+        {
+          "username": "Shiri",
+          "role": "user"
+        }
+      ]
+    }
+  ]
+}

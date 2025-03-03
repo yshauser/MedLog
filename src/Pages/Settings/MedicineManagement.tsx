@@ -13,6 +13,8 @@ export const MedicineManagement = () => {
   const [expandedMedicine, setExpandedMedicine] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMedicine, setEditingMedicine] = useState<Medicine | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [medicineToDelete, setMedicineToDelete] = useState<Medicine | null>(null);
   const [filters, setFilters] = useState({
     name: '',
     activeIngredient: '',
@@ -73,7 +75,9 @@ export const MedicineManagement = () => {
     // await fetchMedicines();
   };
   
-  const handleDelete = async (id: string, type: string) => {
+  const handleDelete = async (medicine: Medicine) => {
+    const id = medicine.id;
+    const type = medicine.type;
     try{
       // Remove the medicine with the given id from each group's data array
       const medicines = MedicineManager.findMedicinesGroupsByType(type);
@@ -308,7 +312,9 @@ export const MedicineManagement = () => {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleDelete(medicine.data[0].id, medicine.data[0].type);
+                                setMedicineToDelete(medicine.data[0]);
+                                setIsDeleteModalOpen(true);
+                                // handleDelete(medicine.data[0].id, medicine.data[0].type);
                               }}
                               className="flex items-center gap-2 px-3 py-2 text-red-600 hover:text-red-800 bg-red-50 rounded-md"
                             >
@@ -403,6 +409,32 @@ export const MedicineManagement = () => {
                 ))}
               </tbody>
             </table>
+            {isDeleteModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+            <p className="text-lg font-medium">האם אתה בטוח שברצונך למחוק את התרופה?</p>
+            <div className="mt-4 flex justify-center space-x-4 gap-2">
+              <button
+                onClick={() => {
+                  if (medicineToDelete) {
+                    handleDelete(medicineToDelete);
+                  }
+                  setIsDeleteModalOpen(false);
+                }}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                מחק
+              </button>
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
           </div>
         </div>
       </div>

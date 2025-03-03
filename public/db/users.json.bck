@@ -10,6 +10,16 @@
         "id": "1739389481650",
         "name": "האוזר",
         "ownerId": "yh"
+      },
+      {
+        "id": "1739403823603",
+        "name": "bbb",
+        "ownerId": "b"
+      },
+      {
+        "id": "1740491044637",
+        "name": "Benesh",
+        "ownerId": "ariel"
       }
     ],
     "users": [
@@ -34,9 +44,9 @@
         "familyId": "1111"
       },
       {
-        "username": "b",
+        "username": "אריאל",
         "role": "owner",
-        "familyId": "1739403823603"
+        "familyId": "1740491124477"
       }
     ]
   }
