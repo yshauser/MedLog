@@ -46,6 +46,12 @@ export const Header = () => {
     setShowLoginModal(true);
   };
 
+  const handleLoginDialogClose = () => {
+    setShowLoginModal(false);
+    setIsOpen(false); // Close the menu when login dialog closes
+    setShowSettingsSubmenu(false); // Also close the submenu
+  };
+
   const handleMenuItemClick = (path: string|undefined, hasSubmenu: boolean) => {
     if (hasSubmenu) {
       setShowSettingsSubmenu(!showSettingsSubmenu);
@@ -130,7 +136,7 @@ export const Header = () => {
         </div>
       )}
 
-      {showLoginModal && <LoginDialog onClose={() => setShowLoginModal(false)} />}
+      {showLoginModal && <LoginDialog onClose={(handleLoginDialogClose)} />}
     </div>
   );
 };

@@ -3,15 +3,15 @@ import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Navigation } from '../components/Navigation';
-import { HomePage } from '../Pages/Home/HomePage'
-import { LogPage } from '../Pages/Log/LogPage';
-import { MedicinesPage } from '../Pages/Medicines/MedicinesPage';
-import { KidsPage } from '../Pages/Kids/KidsPage';
+import { HomePage } from '../Pages/HomePage'
+import { LogPage } from '../Pages/LogPage';
+import { MedicinesPage } from '../Pages/MedicinesPage';
+import { KidsPage } from '../Pages/KidsPage';
 import { NotFoundPage } from '../Pages/NotFound';
 import { LogEntry } from '../types';
-import ScheduledPage from '../Pages/Scheduled/ScheduledPage';
-import MedicineManagement from '../Pages/Settings/MedicineManagement';
+import ScheduledPage from '../Pages/ScheduledPage';
 import UserManagement from '../Pages/Settings/UserManagement';
+import MedicineManagement from '../Pages/Settings/MedicineManagement';
 
 export const MainLayout = () => {
   const [logData, setLogData] = useState<LogEntry[]>([]);
@@ -27,7 +27,7 @@ export const MainLayout = () => {
           <Route path="/medicines" element={<MedicinesPage />} />
           <Route path="/kids" element={<KidsPage />} />
           <Route path="/settings/users" element={<UserManagement />} />
-          <Route path="/settings/medicines" element={<MedicineManagement />} />
+          <Route path="/settings/medicines" element={<MedicineManagement/>}/>
           <Route path="*" element={<NotFoundPage/>}/>
         </Routes>
         <Navigation />

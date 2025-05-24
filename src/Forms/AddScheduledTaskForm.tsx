@@ -1,5 +1,5 @@
 import React , {useState, useEffect, SyntheticEvent} from 'react';
-import { TaskEntry, TreatmentType, Frequency } from '../../types';
+import { TaskEntry, TreatmentType, Frequency } from '../types';
 import {CalendarIcon} from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
@@ -61,7 +61,7 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
         setTreatmentType('סבב טיפול');
       }
     }
-  }, [formData.taskDays]);
+  }, [formData.taskDays, setTreatmentType, setFrequency]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center overflow-y-auto">
@@ -82,6 +82,7 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
                 משתמש
             </label>
             <input
+                id="taskUser"
                 className="w-full p-2 border rounded"
                 placeholder="שם"
                 value={formData.taskUser}
@@ -94,6 +95,7 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
                 תיאור
             </label>
             <input
+                id= "taskLabel"
                 className="w-full p-2 border rounded"
                 placeholder="אנטיביוטיקה, לחץ דם, הרגעה, וכד'"
                 value={formData.taskLabel}
@@ -105,6 +107,7 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
               שם התרופה
             </label>
             <input
+                id="medicine"
                 className="w-full p-2 border rounded"
                 placeholder=""
                 value={formData.medicine}
@@ -118,6 +121,7 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
                 מינון
                 </label>
             <input
+                id="dose"
                 className="w-full p-2 border rounded"
                 placeholder="מינון"
                 value={formData.dose}
@@ -129,6 +133,7 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
               יחידות
             </label>
             <input
+                id="doseUnits"
                 className="w-full p-2 border rounded"
                 placeholder='מ"ל, כדור, וכד'
                 value={formData.doseUnits}
@@ -144,6 +149,7 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
             </label>
             <div className="relative">
                 <DatePicker
+                id="taskStartDate"
                 selected={formData.taskStartDate ? new Date(formData.taskStartDate.split('/').reverse().join('-')) : null}
                 onChange={(date: Date | null, event?: SyntheticEvent<any, Event>) => {
                     if (date) {
@@ -168,7 +174,7 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
          
             <div className="flex gap-4">
             <div className="flex-1">
-            <label htmlFor="taskDays" className="block text-sm font-medium text-gray-700 mb-1"
+            <label htmlFor="treatmentType" className="block text-sm font-medium text-gray-700 mb-1"
               style={{ height: '40px' }}
               >
               משך תקופה
@@ -193,6 +199,7 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
                     מספר ימים לנטילה
                   </label>
                   <input
+                    id="taskDays"
                     className="w-full p-2 border rounded"
                     placeholder="1 / 2 / ..."
                     value={formData.taskDays}
@@ -224,22 +231,23 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
                 </>
               )}
             </div>
-            <div className="flex-1">
-            <label htmlFor="timesPerDay" className="block text-sm font-medium text-gray-700 mb-1"
-              style={{ height: '40px' }}
-              >
-               מספר פעמים ביום
-            </label>
-            <input
-                className="w-full p-2 border rounded"
-                placeholder="מספר פעמים ביום"
-                type="number"
-                min="1"
-                value={formData.timesPerDay}
-                onChange={e => onTaskDataChange({ ...formData, timesPerDay: Number(e.target.value)||0 })}
-                // required
-            />
-            </div>
+              <div className="flex-1">
+                <label htmlFor="timesPerDay" className="block text-sm font-medium text-gray-700 mb-1"
+                  style={{ height: '40px' }}
+                  >
+                  מספר פעמים ביום
+                </label>
+                <input
+                    id="timesPerDay"
+                    className="w-full p-2 border rounded"
+                    placeholder="מספר פעמים ביום"
+                    type="number"
+                    min="1"
+                    value={formData.timesPerDay}
+                    onChange={e => onTaskDataChange({ ...formData, timesPerDay: Number(e.target.value)||0 })}
+                    // required
+                />
+              </div>
             </div>
 
             <div>
@@ -247,6 +255,7 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
               זמן ביום
             </label>
             <input
+                id="timeInDay"
                 className="w-full p-2 border rounded"
                 placeholder="בוקר/צהריים/ערב/20:00/..."
                 value={formData.timeInDay}
@@ -275,6 +284,7 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
                 הערות
             </label>
             <input
+                id="comment"
                 className="w-full p-2 border rounded"
                 placeholder="הערות"
                 value={formData.comment}

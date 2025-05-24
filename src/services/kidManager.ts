@@ -1,4 +1,7 @@
 import { Kid } from '../types.ts';
+import { getKids, getKidsByFamily } from './firestoreService';
+import { timeAndDateFormatter } from './uiUtils.ts';
+
 interface KidData {
   [key: string]: string | number | undefined;
 }
@@ -10,22 +13,30 @@ interface UpdateStatus {
 export class KidManager {
   static async loadKids(): Promise<Kid[]> {
     try {
-      const response = await fetch('/db/kids.json');
-      
-      if (!response.ok) {
-        throw new Error(`Failed to load kids file. Status: ${response.status}`);
-      }
-
-      const data: Omit<Kid, 'age'>[] = await response.json();
-      console.log ('kid manager load ', {data});
+      const data = await getKids();
+      console.log('kid manager load ', { data });
 
       return data.map(kid => ({
         ...kid,
         age: kid.birthDate ? calculateAge(kid.birthDate) : undefined,
       }));
-
     } catch (error) {
       console.error('Error loading kids:', error);
+      return [];
+    }
+  }
+
+  static async loadKidsByFamily(familyId: string): Promise<Kid[]> {
+    try {
+      const data = await getKidsByFamily(familyId);
+      console.log('kid manager load by family', { data });
+
+      return data.map(kid => ({
+        ...kid,
+        age: kid.birthDate ? calculateAge(kid.birthDate) : undefined,
+      }));
+    } catch (error) {
+      console.error('Error loading kids by family:', error);
       return [];
     }
   }
@@ -58,9 +69,18 @@ export class KidManager {
 }
 
 export const calculateAge = (birthDate: string): number => {
+  const  sanitizedBirthDate = timeAndDateFormatter.sanitizedBirthDate(birthDate ? birthDate:"");
   const today = new Date();
-  const [day, month, year] = birthDate.split('/').map((part) => parseInt(part));
-  const birth = new Date(year, month - 1, day);
+  const [day, month, year] = sanitizedBirthDate.split('/').map((part) => parseInt(part));
+  let updatedYear = year;
+  if (year <100 ) {
+    if (year+2000 >today.getFullYear()){
+      updatedYear = year+1900;
+    }else{
+      updatedYear = year+2000;
+    }
+  }
+  const birth = new Date(updatedYear, month - 1, day);
   let age = today.getFullYear() - birth.getFullYear();
   const monthDiff = today.getMonth() - birth.getMonth();
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
@@ -71,6 +91,13 @@ export const calculateAge = (birthDate: string): number => {
   if (age >= 2) {
     if (monthsAfterBirthday >= 9) {
       roundedAge = age + 1;
+    } else if (monthsAfterBirthday == 0){
+      if (day > today.getDate()){
+        roundedAge = age+1;
+      }
+      else {
+        roundedAge = age;
+      }
     } else if (monthsAfterBirthday <= 3) {
       roundedAge = age;
     } else {
@@ -79,6 +106,7 @@ export const calculateAge = (birthDate: string): number => {
   } else if (age < 2) {
     roundedAge = monthsAfterBirthday;
   }
+  // console.log ('calculateAge', {birthDate,sanitizedBirthDate, age, roundedAge, monthsAfterBirthday})
   return roundedAge;
 };
 
