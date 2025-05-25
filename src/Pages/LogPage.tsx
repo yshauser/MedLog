@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Trash2, Edit2, CheckCircle, XCircle, ArrowUpDown, Download, Upload, Save, FileX } from 'lucide-react';
-import { LogManager } from '../../services/logManager';
-import { LogEntry } from '../../types';
+import { LogManager } from '../services/logManager';
+import { LogEntry } from '../types';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
-import { timeAndDateFormatter } from '../../services/uiUtils';
+import { timeAndDateFormatter } from '../services/uiUtils';
 
 interface LogPageProps {
   logData: LogEntry[];

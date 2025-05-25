@@ -1,0 +1,476 @@
+{
+    "version": "1.0.0",
+    "lastUpdated": "2025-01-02",
+    "metadata": {
+      "defaultUnits": {
+        "suspension": "ml",
+        "caplets": "tablets",
+        "weight": "kg",
+        "age": "years"
+      }
+    },
+    "medicines": {
+      "suspension": [
+        {
+          "id": 2001,
+          "name": "Ibuprofen Suspension 20mg/1ml",
+          "type": "suspension",
+          "targetAudience": "ילדים",
+          "activeIngredient": "Ibuprofen",
+          "concentration": "20mg/1ml",
+          "hebName": "נורופן לילדים",
+          "entries": [
+            {
+              "w_low": 5,
+              "w_high": 5.4,
+              "dos": 2,
+              "perDay_low": 3,
+              "perDay_high": 4,
+              "maxDay": 1200,
+              "maxDayPerKg": 40
+            },
+            {
+              "w_low": 5.5,
+              "w_high": 8.1,
+              "dos": 2.5,
+              "perDay_low": 3,
+              "perDay_high": 4,
+              "maxDay": 1200,
+              "maxDayPerKg": 40
+            },
+            {
+              "w_low": 8.2,
+              "w_high": 10.9,
+              "dos": 3.75,
+              "perDay_low": 3,
+              "perDay_high": 4,
+              "maxDay": 1200,
+              "maxDayPerKg": 40
+            },
+            {
+              "w_low": 11,
+              "w_high": 15,
+              "dos": 5,
+              "perDay_low": 3,
+              "perDay_high": 4,
+              "maxDay": 1200,
+              "maxDayPerKg": 40
+            },
+            {
+              "w_low": 16,
+              "w_high": 21,
+              "dos": 7.5,
+              "perDay_low": 3,
+              "perDay_high": 4,
+              "maxDay": 1200,
+              "maxDayPerKg": 40
+            },
+            {
+              "w_low": 22,
+              "w_high": 26,
+              "dos": 10,
+              "perDay_low": 3,
+              "perDay_high": 4,
+              "maxDay": 1200,
+              "maxDayPerKg": 40
+            },
+            {
+              "w_low": 27,
+              "w_high": 32,
+              "dos": 12.5,
+              "perDay_low": 3,
+              "perDay_high": 4,
+              "maxDay": 1200,
+              "maxDayPerKg": 40
+            },
+            {
+              "w_low": 33,
+              "w_high": 43,
+              "dos": 15,
+              "perDay_low": 3,
+              "perDay_high": 4,
+              "maxDay": 1200,
+              "maxDayPerKg": 40
+            }
+          ],
+          "aliases": [
+            {
+              "name": "Nurofen for Children",
+              "hebName": "נורופן לילדים",
+              "company": "Reckitt Benckiser Healthcare UK"
+            }
+          ]
+        },
+        {
+          "id": 2002,
+          "name": "Novimol Tiptipot Suspension 100mg/1ml",
+          "type": "suspension",
+          "targetAudience": "ילדים",
+          "activeIngredient": "Paracetamol",
+          "concentration": "100mg/1ml",
+          "hebName": "נובימול טיפטיפות",
+          "entries": [
+            {
+              "w_low": 3,
+              "w_high": 3,
+              "dos": 0.45,
+              "perDay_low": 5,
+              "perDay_high": 5,
+              "maxDay": 2.25,
+              "maxDayPerKg": 0.75
+            },
+            {
+              "w_low": 4,
+              "w_high": 4,
+              "dos": 0.6,
+              "perDay_low": 5,
+              "perDay_high": 5,
+              "maxDay": 3,
+              "maxDayPerKg": 0.75
+            },
+            {
+              "w_low": 5,
+              "w_high": 5,
+              "dos": 0.75,
+              "perDay_low": 5,
+              "perDay_high": 5,
+              "maxDay": 3.75,
+              "maxDayPerKg": 0.75
+            },
+            {
+              "w_low": 6,
+              "w_high": 6,
+              "dos": 0.9,
+              "perDay_low": 5,
+              "perDay_high": 5,
+              "maxDay": 4.5,
+              "maxDayPerKg": 0.75
+            },
+            {
+              "w_low": 7,
+              "w_high": 7,
+              "dos": 1.05,
+              "perDay_low": 5,
+              "perDay_high": 5,
+              "maxDay": 5.25,
+              "maxDayPerKg": 0.75
+            },
+            {
+              "w_low": 8,
+              "w_high": 8,
+              "dos": 1.2,
+              "perDay_low": 5,
+              "perDay_high": 5,
+              "maxDay": 6,
+              "maxDayPerKg": 0.75
+            },
+            {
+              "w_low": 9,
+              "w_high": 9,
+              "dos": 1.35,
+              "perDay_low": 5,
+              "perDay_high": 5,
+              "maxDay": 6.75,
+              "maxDayPerKg": 0.75
+            },
+            {
+              "w_low": 10,
+              "w_high": 10,
+              "dos": 1.5,
+              "perDay_low": 5,
+              "perDay_high": 5,
+              "maxDay": 7.5,
+              "maxDayPerKg": 0.75
+            },
+            {
+              "w_low": 11,
+              "w_high": 11,
+              "dos": 1.65,
+              "perDay_low": 5,
+              "perDay_high": 5,
+              "maxDay": 8.25,
+              "maxDayPerKg": 0.75
+            },
+            {
+              "w_low": 12,
+              "w_high": 12,
+              "dos": 1.8,
+              "perDay_low": 5,
+              "perDay_high": 5,
+              "maxDay": 9,
+              "maxDayPerKg": 0.75
+            },
+            {
+              "w_low": 13,
+              "w_high": 13,
+              "dos": 1.95,
+              "perDay_low": 5,
+              "perDay_high": 5,
+              "maxDay": 9.75,
+              "maxDayPerKg": 0.75
+            },
+            {
+              "w_low": 14,
+              "w_high": 14,
+              "dos": 2.1,
+              "perDay_low": 5,
+              "perDay_high": 5,
+              "maxDay": 10.5,
+              "maxDayPerKg": 0.75
+            },
+            {
+              "w_low": 15,
+              "w_high": 15,
+              "dos": 2.25,
+              "perDay_low": 5,
+              "perDay_high": 5,
+              "maxDay": 11.25,
+              "maxDayPerKg": 0.75
+            }
+          ]
+        },
+        {
+          "id": "med_1736194886514",
+          "type": "suspension",
+          "name": "Nurofen Forte",
+          "hebName": "נורופן פורטה",
+          "activeIngredient": "Ibuprofen",
+          "targetAudience": "ילדים",
+          "concentration": "40mg/1ml",
+          "strength": "",
+          "entries": [
+            {
+              "w_low": 5,
+              "w_high": 5.4,
+              "dos": 1,
+              "perDay_low": 3,
+              "perDay_high": 4
+            },
+            {
+              "w_low": 5.5,
+              "w_high": 8.1,
+              "dos": 1.25,
+              "perDay_low": 3,
+              "perDay_high": 4
+            }
+          ]
+        }
+      ],
+      "caplets": [
+        {
+          "id": 1001,
+          "name": "Acamol 500mg",
+          "type": "caplets",
+          "targetAudience": "כולם",
+          "activeIngredient": "Paracetamol",
+          "strength": "500mg",
+          "hebName": "אקמול 500",
+          "entries": [
+            {
+              "age_low": 6,
+              "age_high": 12,
+              "dos_low": 0.5,
+              "dos_high": 1,
+              "hoursInterval_low": 4,
+              "hoursInterval_high": 6,
+              "maxDay": 5
+            },
+            {
+              "age_low": 13,
+              "dos_low": 1,
+              "dos_high": 2,
+              "hoursInterval_low": 4,
+              "hoursInterval_high": 6,
+              "maxDay": 8
+            }
+          ],
+          "aliases": [
+            {
+              "name": "Acamol",
+              "hebName": "אקמול",
+              "company": "Teva"
+            }
+          ]
+        },
+        {
+          "id": 1101,
+          "name": "Ibuprofen 200mg",
+          "type": "caplets",
+          "targetAudience": "מבוגרים",
+          "activeIngredient": "Ibuprofen",
+          "strength": "200mg",
+          "hebName": "איבופרופן 200",
+          "entries": [
+            {
+              "age_low": 12,
+              "dos_low": 1,
+              "dos_high": 2,
+              "hoursInterval_low": 4,
+              "hoursInterval_high": 8,
+              "maxDay": 6
+            }
+          ],
+          "aliases": [
+            {
+              "name": "Ibufen",
+              "hebName": "איבופן",
+              "company": "Dexcel"
+            },
+            {
+              "name": "Nurofen",
+              "hebName": "נורופן",
+              "company": "Reckitt Benckiser"
+            }
+          ]
+        },
+        {
+          "id": 1102,
+          "name": "Ibuprofen 400mg",
+          "type": "caplets",
+          "targetAudience": "מבוגרים",
+          "activeIngredient": "Ibuprofen",
+          "strength": "400mg",
+          "hebName": "איבופרופן 400",
+          "entries": [
+            {
+              "age_low": 12,
+              "dos_low": 1,
+              "dos_high": 1,
+              "hoursInterval_low": 4,
+              "hoursInterval_high": 8,
+              "maxDay": 3
+            }
+          ],
+          "aliases": [
+            {
+              "name": "Ibufen Forte",
+              "hebName": "איבופן פורטה",
+              "company": "Dexcel"
+            },
+            {
+              "name": "Nurofen Forte",
+              "hebName": "נורופן פורטה",
+              "company": "Reckitt Benckiser"
+            }
+          ]
+        },
+        {
+          "id": "med_1736197872382",
+          "type": "caplets",
+          "name": "Kalbeten Forte",
+          "hebName": "קלבטן פורטה",
+          "activeIngredient": "bismuth subsalicylate",
+          "targetAudience": "מבוגרים",
+          "concentration": "",
+          "strength": "524mg",
+          "entries": [
+            {
+              "age_low": 12,
+              "dos_low": 1,
+              "dos_high": 1,
+              "maxDay": 8,
+              "hoursInterval_low": 0.5,
+              "hoursInterval_high": 1
+            }
+          ]
+        },
+        {
+          "id": "med_1739964909456",
+          "type": "caplets",
+          "name": "OPTALGIN",
+          "hebName": "אופטלגין",
+          "activeIngredient": "Dipyrone",
+          "targetAudience": "מבוגרים",
+          "strength": "500 mg",
+          "entries": [
+            {
+              "age_low": 15,
+              "dos_low": 1,
+              "dos_high": 2,
+              "hoursInterval_low": 6,
+              "hoursInterval_high": 8,
+              "maxDay": 8
+            }
+          ]
+        }
+      ],
+      "granules": [
+        {
+          "id": "med_1739986876969",
+          "type": "granules",
+          "name": "Avcamol 250",
+          "hebName": "אבקמול 250",
+          "activeIngredient": "Paracetamol",
+          "targetAudience": "ילדים",
+          "strength": "250 mg",
+          "entries": [
+            {
+              "age_low": 9,
+              "age_high": 12,
+              "dos_low": 1,
+              "dos_high": 2,
+              "hoursInterval_low": 4,
+              "hoursInterval_high": 6,
+              "maxDay": 8
+            }
+          ]
+        },
+        {
+          "id": "med_1739988615537",
+          "type": "granules",
+          "name": "Avcamol 500",
+          "hebName": "אבקמול 500",
+          "activeIngredient": "Paracetamol",
+          "targetAudience": "kids",
+          "strength": "500 mg",
+          "entries": [
+            {
+              "age_low": 9,
+              "age_high": 12,
+              "dos_low": 1,
+              "dos_high": 1,
+              "hoursInterval_low": 4,
+              "hoursInterval_high": 6,
+              "maxDay": 4
+            },
+            {
+              "age_low": 12,
+              "dos_low": 1,
+              "dos_high": 2,
+              "hoursInterval_low": 4,
+              "hoursInterval_high": 6,
+              "maxDay": 8
+            }
+          ]
+        }
+      ]
+    },
+    "activeIngredients": {
+      "Ibuprofen": {
+        "alternativeNames": [
+          "IbuPro",
+          "Ibufen",
+          "Nurofen",
+          "Advil",
+          "Adex"
+        ],
+        "category": "NSAID",
+        "maxDailyDose": {
+          "adult": "1200mg",
+          "pediatric": "40mg/kg"
+        }
+      },
+      "Paracetamol": {
+        "alternativeNames": [
+          "Acamol",
+          "Dexamol",
+          "Paramol"
+        ],
+        "category": "Analgesic",
+        "maxDailyDose": {
+          "adult": "4000mg",
+          "pediatric": "75mg/kg"
+        }
+      }
+    }
+  }

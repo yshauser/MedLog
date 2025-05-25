@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { TaskEntry, DailyTakes } from '../../types';
-import { timeAndDateFormatter } from '../../services/uiUtils';
+import { TaskEntry, DailyTakes } from '../types';
+import { timeAndDateFormatter } from '../services/uiUtils';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';

@@ -16,6 +16,7 @@ export interface Kid {
   weight?: number;
   favoriteMedicine?: string;
   lastUpdated: string;
+  familyName: string;
   family: string;
   familyId: string; 
 }

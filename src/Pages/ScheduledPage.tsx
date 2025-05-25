@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { TaskManager, calculateRemainingDays } from '../../services/TaskManager';
-import {timeAndDateFormatter} from '../../services/uiUtils';
-import { TaskEntry } from '../../types';
-import TaskCalendar from './TaskCalendar';
-import AddScheduledTaskForm from './AddScheduledTaskForm';
+import { TaskManager, calculateRemainingDays } from '../services/TaskManager';
+import {timeAndDateFormatter} from '../services/uiUtils';
+import { TaskEntry } from '../types';
+import TaskCalendar from '../components/TaskCalendar';
+import AddScheduledTaskForm from '../Forms/AddScheduledTaskForm';
 import { CalendarCheck, ChevronDown, ChevronUp, Pencil, Trash } from 'lucide-react';
 
 const initialFormData = {
@@ -358,7 +358,7 @@ const ScheduledPage = () => {
                           <p>מ: {timeAndDateFormatter.formatDateForUI(task.taskStartDate)}</p>
                           <p>עד: {task.taskEndDate && timeAndDateFormatter.formatDateForUI(task.taskEndDate)}</p>
                           <p>סך הכל <strong>{task.taskDays}</strong> ימים</p>
-                          <p>נשארו <strong>{task.taskEndDate && calculateRemainingDays(task.taskEndDate)}</strong> ימים</p>
+                          <p>נשארו <strong>{task.taskEndDate && calculateRemainingDays(task.taskEndDate)+1}</strong> ימים</p>
                         </div>
                         <div>
                           <p className="font-semibold mb-2">זמני נטילה:</p>

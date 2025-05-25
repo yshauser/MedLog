@@ -1,4 +1,5 @@
 import {SuspensionMedicine, CapletMedicine, GranulesMedicine, Medicine} from '../types';
+import { getMedicines, getCollection } from './firestoreService';
 
 interface DefaultUnits {
   suspension: string;
@@ -64,26 +65,37 @@ export class MedicineManager {
 
   static async initialize(): Promise<void> {
     try {
-      const response = await fetch('/db/medicines.json');
-      const data: MedicineDataFile = await response.json();
-      console.log ('MedicineManager', {data});
+      // Get medicines from Firestore
+      const medicines = await getMedicines();
+      
+      // Get metadata document from Firestore
+      const metadataCollection = await getCollection<any>('metadata');
+      const metadataDoc = metadataCollection.find(doc => doc.id === 'medicineMetadata');
+      
+      if (metadataDoc) {
+        this.metadata = metadataDoc.defaultUnits ? { defaultUnits: metadataDoc.defaultUnits } : null;
+        this.activeIngredients = metadataDoc.activeIngredients || {};
+        this.targetAudience = metadataDoc.targetAudience || {};
+      }
+      
+      console.log('MedicineManager from Firestore', { medicines, metadata: this.metadata });
 
-      // Store metadata and active ingredients
-      this.metadata = data.metadata;
-      this.activeIngredients = data.activeIngredients;
-      this.targetAudience = data.targetAudience;
-
+      // Group medicines by type
+      const suspensionMeds = medicines.filter(med => med.type === 'suspension');
+      const capletMeds = medicines.filter(med => med.type === 'caplets');
+      const granuleMeds = medicines.filter(med => med.type === 'granules');
+      
       // Initialize medicine groups
       this.medicineGroups = [
-        ...data.medicines.suspension.map(med => ({
+        ...suspensionMeds.map(med => ({
           name: med.hebName,
           data: [med]
         })),
-        ...data.medicines.caplets.map(med => ({
+        ...capletMeds.map(med => ({
           name: med.hebName,
           data: [med]
         })),
-        ...data.medicines.granules.map(med => ({
+        ...granuleMeds.map(med => ({
           name: med.hebName,
           data: [med]
         }))

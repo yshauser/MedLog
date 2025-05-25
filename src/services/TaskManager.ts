@@ -1,25 +1,19 @@
 // TaskManager.ts
 import { TaskEntry } from '../types';
+import { getTasks } from './firestoreService';
 
 export class TaskManager {
   static async loadTasks(): Promise<TaskEntry[]> {
-try {
-      const response = await fetch('/db/tasks.json');
-      
-      if (!response.ok) {
-        throw new Error(`Failed to load tasks file. Status: ${response.status}`);
-      }
-      const data = await response.json();
-      console.log ('Tasks manager load ', {data});
+    try {
+      const data = await getTasks();
+      console.log('Tasks manager load ', { data });
 
       return data;
-
     } catch (error) {
       console.error('Error loading tasks:', error);
       throw error;
     }
   }
-
 }
 
 export const calculateRemainingDays = (endDate: string): number => {

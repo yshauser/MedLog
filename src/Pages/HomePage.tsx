@@ -1,8 +1,8 @@
 // src/pages/Home/HomePage.tsx
 import React, { useState, useEffect } from 'react';
-import { MedicineDialog } from '../../components/MedicineDialog';
-import { KidManager } from '../../services/kidManager';
-import { LogEntry, Kid } from '../../types';
+import { MedicineDialog } from '../components/MedicineDialog';
+import { KidManager } from '../services/kidManager';
+import { LogEntry, Kid } from '../types';
 
 interface HomePageProps {
   logData: LogEntry[];

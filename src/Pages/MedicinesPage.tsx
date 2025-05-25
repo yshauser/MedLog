@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import {useNavigate} from 'react-router-dom';
-import { SuspensionMedicine, CapletMedicine, GranulesMedicine, MedicineType, TargetAudience } from '../../types';
-import { MedicineManager, MedicineGroup } from '../../services/medicineManager';
-import { useAuth } from '../../Users/AuthContext';
+import { SuspensionMedicine, CapletMedicine, GranulesMedicine, MedicineType, TargetAudience } from '../types';
+import { MedicineManager, MedicineGroup } from '../services/medicineManager';
+import { useAuth } from '../Users/AuthContext';
 
 type OrganizationType = 'type' | 'audience';
 

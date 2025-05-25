@@ -66,4 +66,8 @@ export class timeAndDateFormatter{
         if (isNaN(date.getTime())) return '';
         return date.toString();
       };
+      
+      static  sanitizedBirthDate = (date: string)=>{
+       return (date ? date.replace(/\./g, "/"): "");
+      }
 }

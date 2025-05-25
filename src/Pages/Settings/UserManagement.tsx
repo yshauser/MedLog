@@ -70,7 +70,8 @@ export const UserManagement = () => {
       username: newUser.username, 
       role: newUser.role as 'owner' | 'admin' | 'user',
       familyId: showNewFamilyInput ? undefined : newUser.familyId,
-      familyName: showNewFamilyInput ? newUser.familyName : undefined
+      familyName: showNewFamilyInput ? newUser.familyName : undefined,
+      kidOrder: undefined
     };
     // console.log ('UM userToAdd', {userToAdd, families, showNewFamilyInput})
 
