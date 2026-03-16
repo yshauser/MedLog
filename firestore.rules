@@ -1,17 +1,18 @@
 rules_version = '2';
 
-// NOTE: This app currently uses username-based authentication (no Firebase Auth).
-// Because request.auth is always null, rules cannot be scoped per user.
-// When Firebase Auth is added in the future, replace these rules with
-// role-based rules using request.auth.uid and user document lookups.
+// Firebase Auth is now required for all access.
+// Google users are authenticated via Firebase Auth (request.auth != null).
+// Test users (username-only login) bypass Firebase Auth — they are only
+// usable in development; in production all users should have Google sign-in.
+// TODO: Add per-family scoping rules as a future improvement.
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Medicine reference data and metadata — read-only for all clients
+    // Medicine reference data — public read (needed at app startup before login), auth required to write
     match /medicines/{docId} {
       allow read: if true;
-      allow write: if true;
+      allow write: if request.auth != null;
     }
 
     match /metadata/{docId} {
@@ -19,26 +20,27 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Operational collections — open read/write until Firebase Auth is implemented.
-    // TODO: Restrict these with proper auth rules once Firebase Auth is added.
+    // Operational collections — require Firebase Auth session
     match /kids/{docId} {
-      allow read, write: if true;
+      allow read, write: if request.auth != null;
     }
 
     match /logs/{docId} {
-      allow read, write: if true;
+      allow read, write: if request.auth != null;
     }
 
     match /tasks/{docId} {
-      allow read, write: if true;
+      allow read, write: if request.auth != null;
     }
 
     match /users/{docId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if request.auth != null;
     }
 
     match /families/{docId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if request.auth != null;
     }
   }
 }

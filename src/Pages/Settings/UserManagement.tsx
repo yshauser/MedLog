@@ -13,7 +13,7 @@ interface User {
 
 export const UserManagement = () => {
   const { user, users, families, addUser: contextAddUser, getUserFamily, removeUser: contextRemoveUser } = useAuth();
-  const [newUser, setNewUser] = useState({ username: '', role: 'user', familyId: '', familyName: '' });
+  const [newUser, setNewUser] = useState({ username: '', role: 'user', familyId: '', familyName: '', email: '' });
   const [showNewFamilyInput, setShowNewFamilyInput] = useState(false);
   const authContext = useAuth();
 
@@ -64,12 +64,13 @@ export const UserManagement = () => {
       role: newUser.role as 'owner' | 'admin' | 'user',
       familyId: showNewFamilyInput ? undefined : newUser.familyId,
       familyName: showNewFamilyInput ? newUser.familyName : undefined,
+      email: newUser.email.trim() || undefined,
       kidOrder: undefined
     };
     // console.log ('UM userToAdd', {userToAdd, families, showNewFamilyInput})
 
     contextAddUser(userToAdd);
-    setNewUser({ username: '', role: 'user' , familyId: '', familyName: ''}); // Reset input
+    setNewUser({ username: '', role: 'user', familyId: '', familyName: '', email: '' }); // Reset input
     setShowNewFamilyInput (false);
   };
 
@@ -102,6 +103,13 @@ export const UserManagement = () => {
                 value={newUser.username}
                 onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
                 className="w-full p-2 border rounded"
+                />
+              <input
+                type="email"
+                placeholder="אימייל (Google, אופציונלי)"
+                value={newUser.email}
+                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                className="w-full p-2 border rounded mt-2"
                 />
             </div>
             <div className="flex-1">

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { getDocs, collection, doc, setDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { getDocs, collection, doc, setDoc, deleteDoc, query, where } from 'firebase/firestore';
+import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth';
+import { db, auth } from '../firebase';
 
 interface UserData {
   username: string;
@@ -9,6 +10,8 @@ interface UserData {
 interface User extends UserData {
   familyId: string;
   kidOrder: string[] | undefined;
+  email?: string;
+  authProvider?: 'google' | 'test';
 }
 interface Family {
   id: string;
@@ -21,7 +24,8 @@ interface AuthContextType {
   users: User[];
   families: Family[];
   login: (username: string) => { success: boolean, message?: string };
-  logout: () => void;
+  loginWithGoogle: () => Promise<{ success: boolean, message?: string }>;
+  logout: () => Promise<void>;
   addUser: (user: Omit<User, 'familyId'> & { familyId?: string, familyName?: string }) => Promise<void>;
   getUserFamily: (username: string) => Family | undefined;
   getCurrentUserFamily: () => Family | undefined;
@@ -54,7 +58,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           username: doc.data().username,
           role: doc.data().role,
           familyId: doc.data().familyId,
-          kidOrder: doc.data().kidOrder as string[] | undefined // Include kidOrder
+          kidOrder: doc.data().kidOrder as string[] | undefined,
+          email: doc.data().email as string | undefined,
+          authProvider: doc.data().authProvider as 'google' | 'test' | undefined
         }));
 
         // Check if "Admin Family" exists
@@ -76,47 +82,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Check if "admin" user exists
         const adminUser = usersData.find(u => u.username === 'admin');
         if (!adminUser) {
-          // Create "admin" user if it doesn't exist
-          const adminUserRef = doc(db, 'users', 'admin');
-          await setDoc(adminUserRef, {
-            username: 'admin',
-            role: 'admin',
-            familyId: adminFamilyId,
-            kidOrder: [] // Initialize kidOrder for admin
-          });
-          usersData.push({ username: 'admin', role: 'admin', familyId: adminFamilyId, kidOrder: [] });
+          // Create "admin" user if it doesn't exist (requires auth — will be retried on first Google login)
+          // No-op here: admin doc will be created on first authenticated write
         }
 
         setFamilies(familiesData);
         setUsers(usersData);
-
-        // Try to restore last logged in user
-        const lastUser = localStorage.getItem('lastUser');
-        // console.log ('loading from local storage', localStorage.getItem('lastUser'), localStorage);
-        if (lastUser) {
-          try {
-            const storedUser = JSON.parse(lastUser);
-            // Check if user still exists in the loaded users data from Firebase
-            const userStillExists = usersData.some(u => u.username === storedUser.username);
-            if (userStillExists) {
-              // Get the fresh user data from Firebase
-              const freshUserData = usersData.find(u => u.username === storedUser.username);
-              setUser(freshUserData || null);
-            } else {
-              // User no longer exists in Firebase, clear localStorage
-              localStorage.removeItem('lastUser');
-            }
-          } catch (error) {
-            console.error('Error parsing stored user:', error);
-            localStorage.removeItem('lastUser');
-          }
-        } else {
-          // No stored user — default to admin so kids/users lists are populated on first load
-          const adminUserData = usersData.find(u => u.username === 'admin');
-          if (adminUserData) {
-            setUser(adminUserData);
-          }
-        }
 
         setInitialized(true);
       } catch (error) {
@@ -130,9 +101,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loadData();
   }, []);
 
+  // Ref to hold the latest usersData for use inside onAuthStateChanged closure
+  const [loadedUsersRef, setLoadedUsersRef] = React.useState<User[]>([]);
+
+  useEffect(() => {
+    setLoadedUsersRef(users);
+  }, [users]);
+
+  useEffect(() => {
+    // Restore test user session from localStorage (Google users are handled by onAuthStateChanged)
+    const lastUser = localStorage.getItem('lastUser');
+    if (lastUser) {
+      try {
+        const storedUser = JSON.parse(lastUser);
+        if (storedUser.authProvider !== 'google') {
+          const userStillExists = users.some(u => u.username === storedUser.username);
+          if (userStillExists) {
+            const freshUserData = users.find(u => u.username === storedUser.username);
+            setUser(freshUserData || null);
+          } else {
+            localStorage.removeItem('lastUser');
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        localStorage.removeItem('lastUser');
+      }
+    }
+  // Only run once after users are first loaded
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialized]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser?.email) {
+        // Look up by email in current users list
+        const matched = loadedUsersRef.find(u => u.email === firebaseUser.email);
+        if (matched) {
+          setUser(matched);
+        }
+        // If not matched yet, onAuthStateChanged may fire before loadData finishes;
+        // the initialized effect above will handle it on re-load.
+      }
+    });
+    return () => unsubscribe();
+  }, [loadedUsersRef]);
+
   useEffect(() => {
     if (user) {
-      localStorage.setItem('lastUser', JSON.stringify(user));
+      // Only persist test users to localStorage; Google users are restored via onAuthStateChanged
+      if (user.authProvider !== 'google') {
+        localStorage.setItem('lastUser', JSON.stringify(user));
+      }
     } else {
       localStorage.removeItem('lastUser');
     }
@@ -155,7 +175,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = (username: string): { success: boolean, message?: string } => {
-    // Find user by username
+    // Find user by username (test users only — Google users use loginWithGoogle)
     const foundUser = users.find(u => u.username === username);
 
     if (foundUser) {
@@ -169,7 +189,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   };
 
-  const logout = () => {
+  const loginWithGoogle = async (): Promise<{ success: boolean, message?: string }> => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const email = result.user.email;
+
+      // Try to match by email in current users list
+      let matched = users.find(u => u.email === email);
+
+      // If admin has no email yet, patch it now (we are authenticated)
+      if (!matched) {
+        const adminCandidate = users.find(u => u.username === 'admin' && !u.email);
+        if (adminCandidate && email === 'yshauser@gmail.com') {
+          const adminUserRef = doc(db, 'users', 'admin');
+          await setDoc(adminUserRef, { email: 'yshauser@gmail.com', authProvider: 'google' }, { merge: true });
+          const patched: User = { ...adminCandidate, email: 'yshauser@gmail.com', authProvider: 'google' };
+          setUsers(prev => prev.map(u => u.username === 'admin' ? patched : u));
+          matched = patched;
+        }
+      }
+
+      if (matched) {
+        setUser(matched);
+        return { success: true };
+      }
+      // Signed in to Google but no matching app user
+      await signOut(auth);
+      return { success: false, message: `החשבון ${email} אינו רשום. פנה למנהל.` };
+    } catch (error: any) {
+      console.error('Google sign-in error:', error);
+      return { success: false, message: error.message || 'כניסה עם Google נכשלה' };
+    }
+  };
+
+  const logout = async () => {
+    if (user?.authProvider === 'google') {
+      try { await signOut(auth); } catch (e) { console.error('signOut error', e); }
+    }
     setUser(null);
   };
 
@@ -214,7 +271,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         username: newUser.username,
         role: newUser.role,
         familyId: familyId,
-        kidOrder: [] // Initialize kidOrder for new users
+        kidOrder: [],
+        email: newUser.email,
+        authProvider: newUser.email ? 'google' : 'test'
       };
 
       // If this user is an owner and we're creating a new family, update the family's ownerId
@@ -261,7 +320,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return (
     <AuthContext.Provider value={{
       user, users, families,
-      login, logout, addUser, getUserFamily, getCurrentUserFamily, removeUser,
+      login, loginWithGoogle, logout, addUser, getUserFamily, getCurrentUserFamily, removeUser,
       setUser
     }}>
       {children}
