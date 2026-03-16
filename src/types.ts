@@ -55,6 +55,7 @@ export enum MedicineType {
   Suspension = "suspension",
   Caplets = "caplets",
   Granules = "granules",
+  Capsules = "capsules",
   // Suppository = "suppository"
 }
 
@@ -109,6 +110,16 @@ export interface GranulesEntry {
   maxDay: number;
 }
 
+export interface CapsulesEntry {
+  age_low: number;
+  age_high?: number;
+  dos_low: number;
+  dos_high: number;
+  hoursInterval_low: number;
+  hoursInterval_high: number;
+  maxDay: number;
+}
+
 export interface SuspensionMedicine extends MedicineBase {
   type: MedicineType.Suspension;
   concentration: string;
@@ -127,4 +138,10 @@ export interface GranulesMedicine extends MedicineBase {
   entries: GranulesEntry[];
 }
 
-export type Medicine = SuspensionMedicine | CapletMedicine | GranulesMedicine;
+export interface CapsulesMedicine extends MedicineBase {
+  type: MedicineType.Capsules;
+  strength: string;
+  entries: CapsulesEntry[];
+}
+
+export type Medicine = SuspensionMedicine | CapletMedicine | GranulesMedicine | CapsulesMedicine;

@@ -7,6 +7,7 @@ import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { timeAndDateFormatter } from '../services/uiUtils';
 import { useAuth } from '../Users/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 const ADMIN_FAMILY_ID = 'admin-family';
 
@@ -16,6 +17,7 @@ interface LogPageProps {
 }
 
 export const LogPage: React.FC<LogPageProps> = ({ logData, setLogData }) => {
+  const { t } = useTranslation();
   const { user, getCurrentUserFamily } = useAuth();
   const [filters, setFilters] = useState({ date: '', name: '' });
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -120,7 +122,7 @@ export const LogPage: React.FC<LogPageProps> = ({ logData, setLogData }) => {
 
     // Validate hour format
     if (!timeAndDateFormatter.validateHourFormat(editedEntry.logHour)) {
-      alert('שעה לא תקינה. אנא הזן שעה בפורמט תקין (לדוגמה: 09:30)');
+      alert(t('log.invalidHour'));
       return;
     }
     // save update with all entries to file, 
@@ -174,38 +176,38 @@ export const LogPage: React.FC<LogPageProps> = ({ logData, setLogData }) => {
   return (
     <main className="flex-1 flex flex-col p-5 bg-white overflow-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl text-emerald-600 mb-6 text-center">יומן</h1>
+        <h1 className="text-2xl text-emerald-600 mb-6 text-center">{t('log.title')}</h1>
         <button
             onClick={handleExport}
             className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700"
           >
             <Download size={20} />
-            יצא לקובץ
+            {t('log.exportFile')}
           </button>
       </div>
 
       {/* Filters */}
       <div className="mb-4 justify-center items-center flex gap-4">
         <label className="ml-2">
-          הצג: 
+          {t('log.show')}
           <select value={loadOption} 
             className="p-2 border rounded text-right mr-2"
             onChange={(e) => setLoadOption(e.target.value)}
             >
-            <option value="all">הכל</option>
-            <option value="week">שבוע</option>
-            <option value="24h">24 שעות</option>
-            <option value="48h">48 שעות</option>
+            <option value="all">{t('common.all')}</option>
+            <option value="week">{t('log.week')}</option>
+            <option value="24h">{t('log.24h')}</option>
+            <option value="48h">{t('log.48h')}</option>
           </select>
         </label>
         <label className="ml-2">
-          סנן לפי שם:
+          {t('log.filterByName')}
           <select
             className="p-2 border rounded text-right mr-2"
             value={filters.name}
             onChange={(e) => setFilters((prev) => ({ ...prev, name: e.target.value }))}
             >
-            <option value="">הכל</option>
+            <option value="">{t('common.all')}</option>
             {Array.from(new Set(logData.map(entry => entry.kidName))) // Extract unique names
               .map((name) => (
                 <option key={name} value={name}>
@@ -224,17 +226,17 @@ export const LogPage: React.FC<LogPageProps> = ({ logData, setLogData }) => {
               <tr>
                 <th className="border border-gray-300 p-2">
                   <div className="flex items-center justify-center gap-2">
-                    תאריך ושעה
+                    {t('log.dateTime')}
                     <button onClick={toggleSortOrder} className="hover:text-emerald-600">
                       <ArrowUpDown size={16} />
                     </button>
                   </div>
                 </th>
-                <th className="border border-gray-300 p-2">שם</th>
-                <th className="border border-gray-300 p-2">חום</th>
-                <th className="border border-gray-300 p-2">תרופה</th>
-                <th className="border border-gray-300 p-2">מינון</th>
-                <th className="border border-gray-300 p-2">פעולות</th>
+                <th className="border border-gray-300 p-2">{t('log.name')}</th>
+                <th className="border border-gray-300 p-2">{t('log.temperature')}</th>
+                <th className="border border-gray-300 p-2">{t('log.medicine')}</th>
+                <th className="border border-gray-300 p-2">{t('log.dosage')}</th>
+                <th className="border border-gray-300 p-2">{t('log.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -336,7 +338,7 @@ export const LogPage: React.FC<LogPageProps> = ({ logData, setLogData }) => {
           </table>
         </div>
       ) : (
-        <div className="text-center text-gray-500">לא נמצאו רשומות</div>
+        <div className="text-center text-gray-500">{t('log.noRecords')}</div>
       )}
     </main>
   );

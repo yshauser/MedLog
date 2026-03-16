@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Kid } from '../types.ts';
 import { useAuth } from '../Users/AuthContext.tsx';
+import { useTranslation } from 'react-i18next';
 import { addKid, updateKid } from '../services/firestoreService';
 
 interface AddKidFormProps {
@@ -22,6 +23,7 @@ export const AddKidForm: React.FC<AddKidFormProps> = ({
   onSave,
   onKidDataChange,
 }) => {
+  const { t } = useTranslation();
   const { user, getCurrentUserFamily } = useAuth(); // Get the logged-in user
   const families = useAuth().families;
 
@@ -39,7 +41,7 @@ export const AddKidForm: React.FC<AddKidFormProps> = ({
     <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${!isOpen && 'hidden'}`}>
       <div className="bg-white p-6 rounded-lg shadow-lg w-96">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl">{isEditMode ? 'ערוך ילד' : 'הוסף ילד חדש'}</h2>
+          <h2 className="text-xl">{isEditMode ? t('addKidForm.titleEdit') : t('addKidForm.titleAdd')}</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -50,26 +52,26 @@ export const AddKidForm: React.FC<AddKidFormProps> = ({
         <div className="space-y-4">
           <input
             className="w-full p-2 border rounded"
-            placeholder="שם"
+            placeholder={t('addKidForm.namePlaceholder')}
             value={kidData.name || ''}
             onChange={e => onKidDataChange({ ...kidData, name: e.target.value })}
           />
           <input
             className="w-full p-2 border rounded"
-            placeholder="תאריך לידה (DD/MM/YYYY)"
+            placeholder={t('addKidForm.birthDatePlaceholder')}
             value={kidData.birthDate || ''}
             onChange={e => onKidDataChange({ ...kidData, birthDate: e.target.value })}
           />
           <input
             className="w-full p-2 border rounded"
             type="number"
-            placeholder="משקל"
+            placeholder={t('addKidForm.weightPlaceholder')}
             value={kidData.weight || ''}
             onChange={e => onKidDataChange({ ...kidData, weight: Number(e.target.value) })}
           />
           <input
             className="w-full p-2 border rounded"
-            placeholder="תרופה מועדפת"
+            placeholder={t('addKidForm.favoriteMedicinePlaceholder')}
             value={kidData.favoriteMedicine || ''}
             onChange={e => onKidDataChange({ ...kidData, favoriteMedicine: e.target.value })}
           />
@@ -79,7 +81,7 @@ export const AddKidForm: React.FC<AddKidFormProps> = ({
               onChange={(e) => onKidDataChange({ ...kidData, familyId: e.target.value })}
               className="w-full p-2 border rounded"
             >
-              <option value="">בחר משפחה</option>
+              <option value="">{t('addKidForm.selectFamily')}</option>
               {families.map(family => (
                 <option key={`family-${family.id}`} value={family.id}>
                   {family.name}
@@ -97,7 +99,7 @@ export const AddKidForm: React.FC<AddKidFormProps> = ({
               onClick={onClose}
               className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
             >
-              ביטול
+              {t('common.cancel')}
             </button>
             <button
               onClick={async () => {
@@ -113,7 +115,7 @@ export const AddKidForm: React.FC<AddKidFormProps> = ({
                         disabled:bg-gray-400 disabled:text-gray-200 disabled:cursor-not-allowed"
               disabled={user?.role === 'admin' && !kidData.familyId} // Disable if admin and familyId is missing
             >
-              שמור
+              {t('common.save')}
             </button>
           </div>
         </div>

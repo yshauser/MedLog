@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { MedicineManager } from '../services/medicineManager';
 import { LogManager } from '../services/logManager';
 import { LogEntry } from '../types';
+import { useTranslation } from 'react-i18next';
 
 interface MedicineDialogProps {
   isOpen: boolean;
@@ -19,7 +20,7 @@ interface MedicineDialogProps {
 export const MedicineDialog: React.FC<MedicineDialogProps > = ({
     isOpen, onClose, kidName: initialKidName, kidWeight: initialKidWeight, kidAge: initialKidAge, kidFavoriteMedicine, logData, setLogData, isQuickAdd = false }) => {
 // console.log('initials', { initialKidName, initialKidWeight, initialKidAge});
-
+  const { t } = useTranslation();
   const isFirstRender = React.useRef(true);       // Use a ref to track if this is the first render
   const [temperature, setTemperature] = useState('');
   const [selectedMedicine, setSelectedMedicine] = useState('');
@@ -28,7 +29,13 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
   const [kidName, setKidName] = useState('');
   const [weight, setWeight] = useState('');
   const [age, setAge] = useState('');
-  const medicineGroups = MedicineManager.getMedicineGroups();
+  const [medicineGroups, setMedicineGroups] = useState(() => MedicineManager.getMedicineGroups());
+
+  useEffect(() => {
+    if (isOpen) {
+      setMedicineGroups(MedicineManager.getMedicineGroups());
+    }
+  }, [isOpen]);
 
   // console.log('MedicineDialog initiated', {isFirstRender, selectedMedicine, kidName, initialKidName, initialKidWeight, weight, age, initialKidAge});
 
@@ -129,7 +136,7 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
     }catch (error){
       console.error ('Failed saving log entry: ', error)
       setLogData(logData);       // Optionally revert the state if save fails
-      alert('שגיאה בשמירת הרשומה. אנא נסה שנית.'); // Optionally show an error message to the user
+      alert(t('medicineDialog.saveError')); // Optionally show an error message to the user
     }
   };
 
@@ -138,7 +145,7 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
       <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-      <h2 className="text-xl mb-4 text-right">מתן תרופה{kidName && ` - ${kidName}`}</h2>
+      <h2 className="text-xl mb-4 text-right">{t('medicineDialog.title')}{kidName && ` - ${kidName}`}</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Kid Name field - shown only in quick add mode or if no initial kid name */}
         {(isQuickAdd || !initialKidName) && (
@@ -147,7 +154,7 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
                 <input
                   type="text"
                   className="w-full p-2 border rounded text-right"
-                  placeholder="שם הילד"
+                  placeholder={t('medicineDialog.kidName')}
                   value={kidName}
                   onChange={(e) => setKidName(e.target.value)}
                   required
@@ -158,7 +165,7 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
            {/* Weight field - shown only in quick add mode or if no initial weight */}
            {(isQuickAdd || !initialKidWeight) && (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">ק"ג</span>
+              <span className="text-sm text-gray-500">{t('medicineDialog.kg')}</span>
               <div className="relative flex-1">
                 <input
                   type="number"
@@ -166,7 +173,7 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
                   min="0"
                   max="150"
                   className="w-full p-2 border rounded text-right"
-                  placeholder="משקל"
+                  placeholder={t('medicineDialog.weight')}
                   value={weight}
                   onChange={(e) => {
                     const value = e.target.value;
@@ -183,7 +190,7 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
           {/* Age field - shown only in quick add mode or if no initial age */}
           {(isQuickAdd || !initialKidAge) && (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">שנים</span>
+              <span className="text-sm text-gray-500">{t('medicineDialog.years')}</span>
               <div className="relative flex-1">
                 <input
                   type="number"
@@ -191,7 +198,7 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
                   min="0"
                   max="120"
                   className="w-full p-2 border rounded text-right"
-                  placeholder="גיל"
+                  placeholder={t('medicineDialog.age')}
                   value={age}
                   onChange={(e) => setAge(e.target.value)}
                 />
@@ -205,7 +212,7 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
                 type="text"  // Changed to text type for better control
                 inputMode="decimal"  // Shows numeric keyboard on mobile
                 className="w-full p-2 border rounded text-right"
-                placeholder="חום"
+                placeholder={t('medicineDialog.temperature')}
                 value={temperature}
                 onChange={handleTemperatureChange}
                 onBlur={validateTemperature}  // Validate when focus is lost
@@ -213,7 +220,7 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
               />
                 {(parseFloat(temperature) < 34 || parseFloat(temperature) > 43) &&
                 temperature !== "" ? (
-                  'טמפרטורה חייבת להיות בין 34-43') : ('')
+                  t('medicineDialog.tempError')) : ('')
                 }
             </div>
         </div>
@@ -235,7 +242,7 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
             <input
               list="medicines"
               className="w-full p-2 border rounded text-right"
-              placeholder="תרופה"
+              placeholder={t('medicineDialog.medicine')}
               value={selectedMedicine}
               onChange={(e) => setSelectedMedicine(e.target.value)}
             />
@@ -250,7 +257,7 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
         </div>
 
           <div>
-            <label className="block text-sm text-gray-600 mb-1 text-right">מינון מומלץ</label>
+            <label className="block text-sm text-gray-600 mb-1 text-right">{t('medicineDialog.recommendedDosage')}</label>
             <input
               className="w-full p-2 border rounded text-right bg-gray-50"
               value={recommendedDosage}
@@ -259,7 +266,7 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
           </div>
 
           <div>
-            <label className="block text-sm text-gray-600 mb-1 text-right">מינון שניתן</label>
+            <label className="block text-sm text-gray-600 mb-1 text-right">{t('medicineDialog.actualDosage')}</label>
             <input
               className="w-full p-2 border rounded text-right"
               type="number"
@@ -282,13 +289,13 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
               onClick={onClose}
               className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
             >
-              ביטול
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700"
             >
-              שמור
+              {t('common.save')}
             </button>
           </div>
         </form>

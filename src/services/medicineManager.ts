@@ -1,4 +1,4 @@
-import {SuspensionMedicine, CapletMedicine, GranulesMedicine, Medicine} from '../types';
+import {SuspensionMedicine, CapletMedicine, GranulesMedicine, Medicine, CapsulesMedicine} from '../types';
 import { getMedicines, getCollection } from './firestoreService';
 
 interface DefaultUnits {
@@ -83,6 +83,7 @@ export class MedicineManager {
       // Group medicines by type
       const suspensionMeds = medicines.filter(med => med.type === 'suspension');
       const capletMeds = medicines.filter(med => med.type === 'caplets');
+      const capsuleMeds = medicines.filter(med => med.type === 'capsules');
       const granuleMeds = medicines.filter(med => med.type === 'granules');
       
       // Initialize medicine groups
@@ -92,6 +93,10 @@ export class MedicineManager {
           data: [med]
         })),
         ...capletMeds.map(med => ({
+          name: med.hebName,
+          data: [med]
+        })),
+        ...capsuleMeds.map(med => ({
           name: med.hebName,
           data: [med]
         })),
@@ -177,6 +182,17 @@ export class MedicineManager {
           return `${entry.dos_low}-${entry.dos_high} קפליות`;
         }
         return 'תרופה לא תואמת גיל/משקל';
+      } else if (medicine.type === 'capsules') {
+        const entry = medicine.entries.find(
+          e => (kidAge as number) >= e.age_low && (!e.age_high || (kidAge as number) <= e.age_high)
+        );
+        if (entry?.dos_low) {
+          if (!entry.dos_high || entry.dos_high === entry.dos_low) {
+            return `${entry.dos_low} קפסולות`;
+          }
+          return `${entry.dos_low}-${entry.dos_high} קפסולות`;
+        }
+        return 'תרופה לא תואמת גיל/משקל';
       } else if (medicine.type === 'granules') {
         const entry = medicine.entries.find(
           e => (kidAge as number) >= e.age_low && (!e.age_high || (kidAge as number) <= e.age_high)
@@ -217,6 +233,16 @@ export class MedicineManager {
 
         if (key1 === "dos_low" && key2 === "dos_high") {
           return capletItem.entries.every(entry => entry[key1] === entry[key2]);
+        }
+
+        return true;
+      });
+    } else if (firstItem.type === "capsules") {
+      return data.every(item => {
+        const capsuleItem = item as CapsulesMedicine;
+
+        if (key1 === "dos_low" && key2 === "dos_high") {
+          return capsuleItem.entries.every(entry => entry[key1] === entry[key2]);
         }
 
         return true;

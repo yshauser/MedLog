@@ -1,13 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Trash2, Edit2, Plus, ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react';
 import { MedicineManager, MedicineGroup } from '../../services/medicineManager';
-import AddMedicineForm from '../../Forms/AddMedicineForm';
-import { Medicine, MedicineType, TargetAudience, SuspensionMedicine, CapletMedicine, GranulesMedicine } from '../../types';
+import { AddMedicineForm } from '../../Forms/AddMedicineForm';
+import { Medicine, MedicineType, TargetAudience, SuspensionMedicine, CapletMedicine, GranulesMedicine, CapsulesMedicine } from '../../types';
+import { addMedicine, updateMedicine, deleteMedicine } from '../../services/firestoreService';
+import { useTranslation } from 'react-i18next';
 
 type SortField = 'name' | 'activeIngredient' | 'type' | 'targetAudience';
 type SortDirection = 'asc' | 'desc';
 
 export const MedicineManagement = () => {
+  const { t } = useTranslation();
   // const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [medicineGroups, setMedicineGroups] = useState<MedicineGroup[]>([]);
   const [expandedMedicine, setExpandedMedicine] = useState<string | null>(null);
@@ -50,21 +53,19 @@ export const MedicineManagement = () => {
   const handleSave = async (medicine: Medicine) => {
     try {
       console.log ('handle save', {medicine});
-      await fetch('/api/saveToJsonFile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          data: medicine,
-          filename: 'medicines',
-          type: medicine.type
-        })
-      });
-    
-    setEditingMedicine(null);
-    setIsModalOpen(false);
-    await fetchMedicines();
+      if (medicine.id && editingMedicine) {
+        await updateMedicine(medicine.id, medicine);
+      } else {
+        if (!medicine.id) { medicine.id = Date.now().toString(); }
+        await addMedicine(medicine);
+      }
+      await MedicineManager.initialize();
+      setEditingMedicine(null);
+      setIsModalOpen(false);
+      await fetchMedicines();
     } catch (error) {
       console.error ('Error saving medicine:', error);
+      throw error;
     }
   };
 
@@ -77,36 +78,20 @@ export const MedicineManagement = () => {
   
   const handleDelete = async (medicine: Medicine) => {
     const id = medicine.id;
-    const type = medicine.type;
-    try{
-      // Remove the medicine with the given id from each group's data array
-      const medicines = MedicineManager.findMedicinesGroupsByType(type);
-      const updatedMedicineGroups = medicines
-      .flatMap(group => group.data) // Extract all medicines into a flat array
-      .filter(med => med.id !== id); // Remove the medicine with the matching ID
-      
-      console.log('updated medicine:', {id, type, medicines, updatedMedicineGroups});
-      await fetch (`/api/saveToJsonFile/`,{
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filename: 'medicines',
-          data: updatedMedicineGroups,
-          type: type,
-        })
-      });
-      
+    try {
+      await deleteMedicine(id);
+      await MedicineManager.initialize();
+
       // Close expanded view if the deleted medicine was expanded
-      const deletedMedicine = medicineGroups.find(group => 
+      const deletedGroup = medicineGroups.find(group =>
         group.data.some(med => med.id === id)
       );
-      if (deletedMedicine && expandedMedicine === deletedMedicine.name) {
+      if (deletedGroup && expandedMedicine === deletedGroup.name) {
         setExpandedMedicine(null);
       }
 
-      // Refresh the medicines list after deletion
       await fetchMedicines();
-    } catch (error){
+    } catch (error) {
       console.error('Error deleting Medicine', error);
     }
   };
@@ -116,6 +101,7 @@ export const MedicineManagement = () => {
       case MedicineType.Suspension: return 'תרחיף';
       case MedicineType.Caplets: return 'קפליות';
       case MedicineType.Granules: return 'גרנולות';
+      case MedicineType.Capsules: return 'קפסולות';
       default: return type;
     }
   };
@@ -186,14 +172,14 @@ export const MedicineManagement = () => {
   return (
     <div className="p-5">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-2xl text-emerald-600 mb-6 text-center">ניהול תרופות</h1>
+        <h1 className="text-2xl text-emerald-600 mb-6 text-center">{t('manageMedicines.title')}</h1>
         
         <button
           onClick={() => setIsModalOpen(true)}
           className="mb-4 flex items-center bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
           >
           {/* <Plus size={20} className="mr-2" /> */}
-          הוסף תרופה
+          {t('manageMedicines.addMedicine')}
         </button>
 
         <AddMedicineForm
@@ -208,28 +194,28 @@ export const MedicineManagement = () => {
           <div className="p-4 grid grid-cols-4 gap-4 border-b">
             <input
               type="text"
-              placeholder="סנן לפי שם תרופה"
+              placeholder={t('manageMedicines.filterByName')}
               value={filters.name}
               onChange={(e) => setFilters(prev => ({ ...prev, name: e.target.value }))}
               className="p-2 border rounded-md text-right"
             />
             <input
               type="text"
-              placeholder="סנן לפי חומר פעיל"
+              placeholder={t('manageMedicines.filterByIngredient')}
               value={filters.activeIngredient}
               onChange={(e) => setFilters(prev => ({ ...prev, activeIngredient: e.target.value }))}
               className="p-2 border rounded-md text-right"
             />
             <input
               type="text"
-              placeholder="סנן לפי סוג תרופה"
+              placeholder={t('manageMedicines.filterByType')}
               value={filters.type}
               onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
               className="p-2 border rounded-md text-right"
             />
             <input
               type="text"
-              placeholder="סנן לפי קהל יעד"
+              placeholder={t('manageMedicines.filterByAudience')}
               value={filters.targetAudience}
               onChange={(e) => setFilters(prev => ({ ...prev, targetAudience: e.target.value }))}
               className="p-2 border rounded-md text-right"
@@ -245,7 +231,7 @@ export const MedicineManagement = () => {
                       className="flex items-center gap-2"
                       onClick={() => handleSort('name')}
                     >
-                      <span>שם</span>
+                      <span>{t('manageMedicines.name')}</span>
                       <ArrowUpDown size={16} />
                     </button>
                   </th>
@@ -254,7 +240,7 @@ export const MedicineManagement = () => {
                       className="flex items-center gap-2"
                       onClick={() => handleSort('activeIngredient')}
                     >
-                      <span>חומר פעיל</span>
+                      <span>{t('manageMedicines.activeIngredient')}</span>
                       <ArrowUpDown size={16} />
                     </button>
                   </th>
@@ -263,7 +249,7 @@ export const MedicineManagement = () => {
                       className="flex items-center gap-2"
                       onClick={() => handleSort('type')}
                     >
-                      <span>סוג</span>
+                      <span>{t('manageMedicines.type')}</span>
                       <ArrowUpDown size={16} />
                     </button>
                   </th>
@@ -272,7 +258,7 @@ export const MedicineManagement = () => {
                       className="flex items-center gap-2"
                       onClick={() => handleSort('targetAudience')}
                     >
-                      <span>קהל יעד</span>
+                      <span>{t('manageMedicines.targetAudience')}</span>
                       <ArrowUpDown size={16} />
                     </button>
                   </th>
@@ -307,7 +293,7 @@ export const MedicineManagement = () => {
                               className="flex items-center gap-2 px-3 py-2 text-blue-600 hover:text-blue-800 bg-blue-50 rounded-md"
                             >
                               <Edit2 size={20} />
-                              <span>עריכה</span>
+                              <span>{t('manageMedicines.editing')}</span>
                             </button>
                             <button
                               onClick={(e) => {
@@ -319,7 +305,7 @@ export const MedicineManagement = () => {
                               className="flex items-center gap-2 px-3 py-2 text-red-600 hover:text-red-800 bg-red-50 rounded-md"
                             >
                               <Trash2 size={20} />
-                              <span>מחיקה</span>
+                              <span>{t('manageMedicines.deleting')}</span>
                             </button>
                           </div>
                           <div className="overflow-x-auto">
@@ -329,26 +315,34 @@ export const MedicineManagement = () => {
                             <tr className="bg-emerald-100">
                               {medicine.data[0].type === "suspension" ? (
                                 <>
-                                  <th className="border p-2 text-right">משקל מינימום (ק״ג)</th>
-                                  <th className="border p-2 text-right">משקל מקסימום (ק״ג)</th>
-                                  <th className="border p-2 text-right">מינון (מ״ל)</th>
-                                  <th className="border p-2 text-right">פעמים ביום</th>
+                                  <th className="border p-2 text-right">{t('medicines.weightMin')}</th>
+                                  <th className="border p-2 text-right">{t('medicines.weightMax')}</th>
+                                  <th className="border p-2 text-right">{t('medicines.dosage')}</th>
+                                  <th className="border p-2 text-right">{t('medicines.timesPerDay')}</th>
                                 </>
                               ) : medicine.data[0].type === "caplets" ? (
                                 <>
-                                  <th className="border p-2 text-right">גיל מינימום (שנים)</th>
-                                  <th className="border p-2 text-right">גיל מקסימום (שנים)</th>
-                                  <th className="border p-2 text-right">מינון (קפליות)</th>
-                                  <th className="border p-2 text-right">שעות בין מינונים</th>
-                                  <th className="border p-2 text-right">מקסימום ליום</th>
+                                  <th className="border p-2 text-right">{t('medicines.ageMin')}</th>
+                                  <th className="border p-2 text-right">{t('medicines.ageMax')}</th>
+                                  <th className="border p-2 text-right">{t('medicines.dosageCaplets')}</th>
+                                  <th className="border p-2 text-right">{t('medicines.hoursInterval')}</th>
+                                  <th className="border p-2 text-right">{t('medicines.maxPerDay')}</th>
                                 </>
                               ) : medicine.data[0].type === "granules" ? (
                                 <>
-                                  <th className="border p-2 text-right">גיל מינימום (שנים)</th>
-                                  <th className="border p-2 text-right">גיל מקסימום (שנים)</th>
-                                  <th className="border p-2 text-right">מינון (קפליות)</th>
-                                  <th className="border p-2 text-right">שעות בין מינונים</th>
-                                  <th className="border p-2 text-right">מקסימום ליום</th>
+                                  <th className="border p-2 text-right">{t('medicines.ageMin')}</th>
+                                  <th className="border p-2 text-right">{t('medicines.ageMax')}</th>
+                                  <th className="border p-2 text-right">{t('medicines.dosageCaplets')}</th>
+                                  <th className="border p-2 text-right">{t('medicines.hoursInterval')}</th>
+                                  <th className="border p-2 text-right">{t('medicines.maxPerDay')}</th>
+                                </>
+                              ) : medicine.data[0].type === "capsules" ? (
+                                <>
+                                  <th className="border p-2 text-right">{t('medicines.ageMin')}</th>
+                                  <th className="border p-2 text-right">{t('medicines.ageMax')}</th>
+                                  <th className="border p-2 text-right">{t('medicines.dosageCapsules')}</th>
+                                  <th className="border p-2 text-right">{t('medicines.hoursInterval')}</th>
+                                  <th className="border p-2 text-right">{t('medicines.maxPerDay')}</th>
                                 </>
                               ): null}
                             </tr>
@@ -395,6 +389,20 @@ export const MedicineManagement = () => {
                                     </td>
                                     <td className="border p-2 text-right">{(item as GranulesMedicine["entries"][0]).maxDay}</td>
                                   </>
+                                ) : medicine.data[0].type === "capsules" ? (
+                                  <>
+                                    <td className="border p-2 text-right">{(item as CapsulesMedicine["entries"][0]).age_low}</td>
+                                    <td className="border p-2 text-right">{(item as CapsulesMedicine["entries"][0]).age_high ? ((item as CapsulesMedicine["entries"][0]).age_high):('∞')}</td>
+                                    <td className="border p-2 text-right">
+                                      {(item as CapsulesMedicine["entries"][0]).dos_high === (item as CapsulesMedicine["entries"][0]).dos_low
+                                        ? (item as CapsulesMedicine["entries"][0]).dos_low
+                                        : `${(item as CapsulesMedicine["entries"][0]).dos_high} - ${(item as CapsulesMedicine["entries"][0]).dos_low}`}
+                                    </td>
+                                    <td className="border p-2 text-right">
+                                      {`${(item as CapsulesMedicine["entries"][0]).hoursInterval_high} - ${(item as CapsulesMedicine["entries"][0]).hoursInterval_low}`}
+                                    </td>
+                                    <td className="border p-2 text-right">{(item as CapsulesMedicine["entries"][0]).maxDay}</td>
+                                  </>
                                 ): null}
                               </tr>
                             ))}
@@ -412,7 +420,7 @@ export const MedicineManagement = () => {
             {isDeleteModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-            <p className="text-lg font-medium">האם אתה בטוח שברצונך למחוק את התרופה?</p>
+            <p className="text-lg font-medium">{t('manageMedicines.confirmDelete')}</p>
             <div className="mt-4 flex justify-center space-x-4 gap-2">
               <button
                 onClick={() => {
@@ -423,13 +431,13 @@ export const MedicineManagement = () => {
                 }}
                 className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
               >
-                מחק
+                {t('common.delete')}
               </button>
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
                 className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
               >
-                ביטול
+                {t('common.cancel')}
               </button>
             </div>
           </div>

@@ -110,7 +110,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.error('Error parsing stored user:', error);
             localStorage.removeItem('lastUser');
           }
-      }
+        } else {
+          // No stored user — default to admin so kids/users lists are populated on first load
+          const adminUserData = usersData.find(u => u.username === 'admin');
+          if (adminUserData) {
+            setUser(adminUserData);
+          }
+        }
 
         setInitialized(true);
       } catch (error) {

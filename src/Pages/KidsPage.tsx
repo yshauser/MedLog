@@ -4,6 +4,7 @@ import { calculateAge, KidManager, updateDateYearTo4digits } from '../services/k
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Pencil, Trash } from 'lucide-react';
 import { useAuth } from '../Users/AuthContext.tsx';
+import { useTranslation } from 'react-i18next';
 import AddKidForm from '../Forms/AddKidForm.tsx';
 import { timeAndDateFormatter } from '../services/uiUtils.ts';
 import { addKid as addKidDoc, updateKid as updateKidDoc, deleteKid as deleteKidDoc, getKids, getFamilyNameByFamilyId, updateKidsOrder, updateUserKidOrder } from '../services/firestoreService';
@@ -11,6 +12,7 @@ import { addKid as addKidDoc, updateKid as updateKidDoc, deleteKid as deleteKidD
 const ADMIN_FAMILY_ID = 'admin-family';
 
 export const KidsPage = () => {
+  const { t } = useTranslation();
   const { user, getCurrentUserFamily, setUser, families } = useAuth();
   const [kids, setKids] = useState<Kid[]>([]);
   const [filteredKids, setFilteredKids] = useState<Kid[]>([]);
@@ -221,10 +223,10 @@ export const KidsPage = () => {
 
   return (
     <main className="flex-1 flex flex-col items-center justify-center p-4 bg-white">
-      <h1 className="text-2xl text-emerald-600 mb-6">ילדים</h1>
+      <h1 className="text-2xl text-emerald-600 mb-6">{t('kids.title')}</h1>
       {isAdminFamilyMember && (
         <div className="w-full max-w-2xl mb-4 flex items-center gap-3">
-          <label className="text-sm font-medium text-gray-700 whitespace-nowrap">סינון משפחה:</label>
+          <label className="text-sm font-medium text-gray-700 whitespace-nowrap">{t('kids.filterFamily')}</label>
           <select
             value={selectedFamilyFilter}
             onChange={e => {
@@ -233,7 +235,7 @@ export const KidsPage = () => {
             }}
             className="p-2 border rounded text-sm"
           >
-            <option value="all">כל המשפחות</option>
+            <option value="all">{t('kids.allFamilies')}</option>
             {families
               .filter(f => f.id !== ADMIN_FAMILY_ID)
               .map(f => (
@@ -247,7 +249,7 @@ export const KidsPage = () => {
         onClick={() => setIsModalOpen(true)}
         className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 mb-4"
       >
-        הוסף ילד
+        {t('kids.addKid')}
       </button>
       ) : null }
       <AddKidForm
@@ -285,7 +287,7 @@ export const KidsPage = () => {
                         onClick={() => toggleRowExpansion(kid.id)}
                         >
                         <h3 className="text-lg font-medium flex-1">{kid.name}</h3>
-                        <span className="text-gray-600 mx-4">גיל: {kid.age}</span>
+                        <span className="text-gray-600 mx-4">{t('kids.age')}: {kid.age}</span>
                           {user?.role === 'admin' || user?.role === 'owner' ? (
                         <div className="flex items-center space-x-2">
                           <button
@@ -314,20 +316,20 @@ export const KidsPage = () => {
                        <div className="mt-2 text-gray-500 text-sm space-y-1 bg-gray-100 p-2 rounded-lg">
                         {kid.birthDate && (
                           // <p>תאריך לידה: {new Date(kid.birthDate.split('/').reverse().join('-')).toLocaleDateString('he-IL')}</p>
-                          <p>תאריך לידה: {kid.birthDate}</p>
+                          <p>{t('kids.birthDate')}: {kid.birthDate}</p>
 
                         )}
                         {kid.weight && (
-                          <p>משקל: {kid.weight} ק"ג</p>
+                          <p>{t('kids.weight')}: {kid.weight} {t('medicineDialog.kg')}</p>
                         )}
                         {kid.favoriteMedicine && (
-                          <p>תרופה מועדפת: {kid.favoriteMedicine}</p>
+                          <p>{t('kids.favoriteMedicine')}: {kid.favoriteMedicine}</p>
                         )}
                           <p className={KidManager.checkLastUpdatedStatus(kid.age, kid.lastUpdated).color}>
-                            עודכן לאחרונה: {kid.lastUpdated}
+                            {t('kids.lastUpdated')}: {kid.lastUpdated}
                           </p>
                         {user?.role === 'admin' ? (
-                          <p>משפחה: {kid.familyName}</p>
+                          <p>{t('kids.family')}: {kid.familyName}</p>
                           // <p>משפחה: {getCurrentUserFamily()?.name || kid.family}</p>
                         ) : null}
                         </div>
@@ -337,7 +339,7 @@ export const KidsPage = () => {
                   )}
                </Draggable>
              ))
-            ):(<p>אין ילדים להצגה</p>)}
+            ):(<p>{t('kids.noKids')}</p>)}
           {provided.placeholder}
         </div>
             )}
@@ -347,7 +349,7 @@ export const KidsPage = () => {
       {isDeleteModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-            <p className="text-lg font-medium">האם אתה בטוח שברצונך למחוק את הילד?</p>
+            <p className="text-lg font-medium">{t('kids.confirmDelete')}</p>
             <div className="mt-4 flex justify-center space-x-4 gap-2">
               <button
                 onClick={() => {
@@ -358,13 +360,13 @@ export const KidsPage = () => {
                 }}
                 className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
               >
-                מחק
+                {t('common.delete')}
               </button>
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
                 className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
               >
-                ביטול
+                {t('common.cancel')}
               </button>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {useNavigate} from 'react-router-dom';
-import { SuspensionMedicine, CapletMedicine, GranulesMedicine, MedicineType, TargetAudience } from '../types';
+import { SuspensionMedicine, CapletMedicine, GranulesMedicine, MedicineType, TargetAudience, CapsulesMedicine } from '../types';
 import { MedicineManager, MedicineGroup } from '../services/medicineManager';
 import { useAuth } from '../Users/AuthContext';
 
@@ -26,6 +26,7 @@ export const MedicinesPage = () => {
     [MedicineType.Suspension]: 'תרחיפים',
     [MedicineType.Caplets]: 'קפליות',
     [MedicineType.Granules]: 'גרנולות',
+    [MedicineType.Capsules]: 'קפסולות',
   };
 
   return (
@@ -109,6 +110,7 @@ export const MedicinesPage = () => {
             {selectedType === MedicineType.Suspension ? 'תרחיפים' : 
              selectedType === MedicineType.Caplets ? 'קפליות' : 
              selectedType === MedicineType.Granules ? 'גרנולות' : 
+             selectedType === MedicineType.Capsules ? 'קפסולות' : 
              selectedType === 'kids' ? 'תרופות לילדים' : 'תרופות למבוגרים'}
           </h2>
           {(organizationMethod === 'type' 
@@ -163,11 +165,19 @@ export const MedicinesPage = () => {
                       <th className="border p-2 text-right">שעות בין מינונים</th>
                       <th className="border p-2 text-right">מקסימום ביום</th>
                     </>
+                    ) : selectedMedicine.data[0].type === "capsules" ? (
+                    <>
+                      <th className="border p-2 text-right">גיל מינימום (שנים)</th>
+                      <th className="border p-2 text-right">גיל מקסימום (שנים)</th>
+                      <th className="border p-2 text-right">מינון (קפסולות)</th>
+                      <th className="border p-2 text-right">שעות בין מינונים</th>
+                      <th className="border p-2 text-right">מקסימום ביום</th>
+                    </>
                   ) : null}            
                 </tr>
               </thead>
               <tbody>
-              {selectedMedicine?.data[0].entries.map((item: SuspensionMedicine["entries"][0] | CapletMedicine["entries"][0] | GranulesMedicine["entries"][0] , index: number) => (
+              {selectedMedicine?.data[0].entries.map((item: SuspensionMedicine["entries"][0] | CapletMedicine["entries"][0] | GranulesMedicine["entries"][0] | CapsulesMedicine["entries"][0] , index: number) => (
                   <tr key={index} className="hover:bg-gray-50">
                     {selectedMedicine.data[0].type === "suspension" ? (
                       (item as SuspensionMedicine["entries"][0]) && (
@@ -222,6 +232,22 @@ export const MedicinesPage = () => {
                           </td>
                           <td className="border p-2 text-right">{(item as GranulesMedicine["entries"][0]).maxDay}</td>
                         </>
+                        ) : selectedMedicine.data[0].type === "capsules" ? (
+                      <>
+                        <td className="border p-2 text-right">{(item as CapsulesMedicine["entries"][0]).age_low}</td>
+                        <td className="border p-2 text-right">{(item as CapsulesMedicine["entries"][0]).age_high ? ((item as CapletMedicine["entries"][0]).age_high):('∞')}</td>
+                        {(item as CapsulesMedicine["entries"][0]).dos_high === (item as CapsulesMedicine["entries"][0]).dos_low ? (
+                          <td className="border p-2 text-right">{(item as CapsulesMedicine["entries"][0]).dos_low}</td>
+                        ) : (
+                          <td className="border p-2 text-right">
+                            {(item as CapsulesMedicine["entries"][0]).dos_high} - {(item as CapsulesMedicine["entries"][0]).dos_low}
+                          </td>
+                        )}
+                        <td className="border p-2 text-right">
+                          {(item as CapsulesMedicine["entries"][0]).hoursInterval_high} - {(item as CapsulesMedicine["entries"][0]).hoursInterval_low}
+                        </td>
+                        <td className="border p-2 text-right">{(item as CapsulesMedicine["entries"][0]).maxDay}</td>
+                      </>
                     ) : null}
                   </tr>
                 ))}

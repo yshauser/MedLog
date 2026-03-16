@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TaskManager, calculateRemainingDays } from '../services/TaskManager';
+import { addTask, updateTask as updateTaskDoc, deleteTask as deleteTaskDoc } from '../services/firestoreService';
 import {timeAndDateFormatter} from '../services/uiUtils';
 import { TaskEntry } from '../types';
 import TaskCalendar from '../components/TaskCalendar';
@@ -82,29 +83,12 @@ const ScheduledPage = () => {
     filterTasks(currentFilter);
   }, [tasks, currentFilter]);
 
-  const saveTasksToFile = async (updatedTasks: TaskEntry[]) => {
-    try {
-      await fetch('/api/saveToJsonFile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filename: 'tasks',
-          data: updatedTasks,
-          type: 'scheduled', 
-        })
-      });
-    } catch (error) {
-      console.error('Error saving tasks to file:', error);
-    }
-  };  
-
   const handleUpdateTask = async (taskId: string, updatedData: Partial<TaskEntry>) => {
     try {
-      const updatedTasks = tasks.map(task => 
+      await updateTaskDoc(taskId, updatedData);
+      setTasks(prev => prev.map(task =>
         task.id === taskId ? { ...task, ...updatedData } : task
-      );
-      setTasks(updatedTasks);
-      await saveTasksToFile(updatedTasks);
+      ));
     } catch (error) {
       console.error('Error updating task:', error);
     }
@@ -112,19 +96,8 @@ const ScheduledPage = () => {
 
   const handleDelete = async (taskId: string) => {
     try {
-      console.log ('in delete task', {taskId, tasks});
-      const updatedTasksData = tasks.filter(task => task.id !== taskId);
-      await fetch(`/api/saveToJsonFile/`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filename: 'tasks',
-          data: updatedTasksData,
-          type: 'tasks',
-        })
-      });
-      // Update UI by filtering out the deleted task
-      setTasks(tasks.filter(task => task.id !== taskId));
+      await deleteTaskDoc(taskId);
+      setTasks(prev => prev.filter(task => task.id !== taskId));
     } catch (error) {
       console.error('Error deleting task:', error);
     }
@@ -147,29 +120,25 @@ const ScheduledPage = () => {
     endDate.setDate(startDate.getDate() + formData.taskDays-1);
      console.log ('handle submit', {startDate, endDate}, formData.taskDays)
     if (taskToEdit) {
-      // If editing, maintain the same ID
       const updatedTask: TaskEntry = {
         ...formData,
         id: taskToEdit.id,
         taskStartDate: timeAndDateFormatter.formatDateForUI(startDate.toString()),
         taskEndDate: timeAndDateFormatter.formatDateForUI(endDate.toString())
       };
-      const updatedTasks = tasks.map(task => 
+      await updateTaskDoc(taskToEdit.id, updatedTask);
+      setTasks(prev => prev.map(task =>
         task.id === taskToEdit.id ? updatedTask : task
-      );
-      setTasks(updatedTasks);
-      await saveTasksToFile(updatedTasks);
+      ));
     } else {
       const newTask: TaskEntry = {
-      id: Date.now().toString(),
-      ...formData,
-      taskStartDate: timeAndDateFormatter.formatDateForUI(startDate.toString()),
-      taskEndDate: timeAndDateFormatter.formatDateForUI(endDate.toString())
+        id: Date.now().toString(),
+        ...formData,
+        taskStartDate: timeAndDateFormatter.formatDateForUI(startDate.toString()),
+        taskEndDate: timeAndDateFormatter.formatDateForUI(endDate.toString())
       };
-      const updatedTasks = [...tasks, newTask];
-      setTasks(updatedTasks);
-      await saveTasksToFile(updatedTasks);
-      // console.log ('submit new',{updatedTasks})
+      await addTask(newTask);
+      setTasks(prev => [...prev, newTask]);
     }
     setIsFormOpen(false);
     handleClose();

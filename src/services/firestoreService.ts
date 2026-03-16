@@ -14,6 +14,21 @@ import {
 import { db } from '../firebase';
 import { Kid, LogEntry, Medicine, TaskEntry } from '../types';
 
+// Recursively remove undefined fields so Firestore doesn't reject them
+const stripUndefined = <T>(obj: T): T => {
+  if (Array.isArray(obj)) {
+    return obj.map(stripUndefined) as unknown as T;
+  }
+  if (obj !== null && typeof obj === 'object') {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => [k, stripUndefined(v)])
+    ) as T;
+  }
+  return obj;
+};
+
 // Generic function to get all documents from a collection
 export const getCollection = async <T>(collectionName: string): Promise<T[]> => {
   try {
@@ -52,12 +67,13 @@ export const addDocument = async <T extends { id?: string }>(
   try {
     // If the document has an ID, use it, otherwise let Firestore generate one
     let docRef;
-    if (data.id) {
-      docRef = doc(db, collectionName, data.id);
-      await setDoc(docRef, data);
-      return data.id;
+    const clean = stripUndefined(data);
+    if (clean.id) {
+      docRef = doc(db, collectionName, clean.id);
+      await setDoc(docRef, clean);
+      return clean.id;
     } else {
-      docRef = await addDoc(collection(db, collectionName), data);
+      docRef = await addDoc(collection(db, collectionName), clean);
       return docRef.id;
     }
   } catch (error) {
@@ -74,7 +90,7 @@ export const updateDocument = async <T>(
 ): Promise<void> => {
   try {
     const docRef = doc(db, collectionName, id);
-    await updateDoc(docRef, data as any);
+    await updateDoc(docRef, stripUndefined(data) as any);
   } catch (error) {
     console.error(`Error updating document in ${collectionName}:`, error);
     throw error;
@@ -105,7 +121,7 @@ export const batchUpdate = async <T extends { id: string }>(
     
     documents.forEach((document) => {
       const docRef = doc(db, collectionName, document.id);
-      batch.set(docRef, document);
+      batch.set(docRef, stripUndefined(document));
     });
     
     await batch.commit();

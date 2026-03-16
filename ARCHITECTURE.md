@@ -237,11 +237,11 @@ src/
 > Review the items below. Mark priorities, add new items, or remove items you don't want. Then we'll implement them.
 
 - [x] **Fix Firestore rules** — updated expiry, replaced with per-collection rules, deployed to Firebase
-- [ ] **Migrate ScheduledPage to Firestore** — replace `/api/saveToJsonFile` calls with firestoreService
-- [ ] **Migrate MedicineManagement to Firestore** — same issue as ScheduledPage
+- [x] **Migrate ScheduledPage to Firestore** — replaced `/api/saveToJsonFile` calls with `addTask`/`updateTask`/`deleteTask` from firestoreService
+- [x] **Migrate MedicineManagement to Firestore** — replaced `/api/saveToJsonFile` calls with `addMedicine`/`updateMedicine`/`deleteMedicine` from firestoreService
 - [x] **Remove dead code** — deleted `fileHandling.ts`, `usersManager.ts`, `Pages/Kids/AddKidForm.tsx`, `Pages/Medicines/AddMedicineForm.tsx`
 - [x] **Consolidate duplicate forms** — `MedicineManagement.tsx` now imports from `Forms/AddMedicineForm`
-- [ ] **Extend i18n** — translate all pages, forms, navigation, and error messages
+- [x] **Extend i18n** — all pages, forms, navigation, and error messages now use `useTranslation` with full `en.json` and `he.json` translation files
 - [x] **Fix React hooks violation** — removed `useCallback` inside `onChange` handler in `AddScheduledTaskForm.tsx`, replaced with inline date formatting logic
 - [ ] **Add proper authentication** — Firebase Auth with email/password or Google login
 - [x] **Remove hardcoded API keys** — `dataMigration.ts` now imports shared `db` from `firebase.js`

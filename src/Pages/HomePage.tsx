@@ -4,6 +4,7 @@ import { MedicineDialog } from '../components/MedicineDialog';
 import { KidManager } from '../services/kidManager';
 import { LogEntry, Kid } from '../types';
 import { useAuth } from '../Users/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 const ADMIN_FAMILY_ID = 'admin-family';
 
@@ -13,6 +14,7 @@ interface HomePageProps {
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ logData, setLogData }) => {
+  const { t } = useTranslation();
   const { user, getCurrentUserFamily } = useAuth();
   const [selectedKid, setSelectedKid] = useState<Kid | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -74,7 +76,7 @@ export const HomePage: React.FC<HomePageProps> = ({ logData, setLogData }) => {
         onClick={() => setIsQuickAddOpen(true)}
         className="bg-emerald-600 text-white w-32 h-32 rounded-full shadow-md hover:bg-emerald-700 transition-colors flex items-center justify-center text-xl"
       >
-        תיעוד תרופה/חום
+        {t('home.logMedicine')}
       </button>
 
       <MedicineDialog
