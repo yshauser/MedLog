@@ -1,0 +1,26 @@
+{
+  "header": {
+    "home": "בית",
+    "log": "תיעוד",
+    "scheduled": "תקופתי",
+    "medicines": "תרופות",
+    "kids": "ילדים",
+    "settings": "הגדרות",
+    "manageMedicines": "ניהול תרופות",
+    "manageUsers": "ניהול משתמשים",
+    "switchUser": "החלף משתמש",
+    "about":"אודות",
+    "close": "סגור"
+  },
+    "about": {
+      "description": "ניהול ותיעוד תרופות משפחתי",
+      "version": "גרסה",
+      "developer": "מפתח:",
+      "developerName": "יוסי האוזר",
+      "contact": "צור קשר",
+      "appNameLabel": "שם האפליקציה",
+      "emailLabel": "אימייל"
+    },
+    "appTitle": "תרופותי",
+    "guest": "אורח"
+  }

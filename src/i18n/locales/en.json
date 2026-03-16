@@ -1,0 +1,26 @@
+{
+  "header": {
+    "home": "Home",
+    "log": "Log",
+    "scheduled": "Scheduled",
+    "medicines": "Medicines",
+    "kids": "Kids",
+    "settings": "Settings",
+    "manageMedicines": "Manage Medicines",
+    "manageUsers": "Manage Users",
+    "switchUser": "Switch User",
+    "about":"About",
+    "close": "Close"
+  },
+    "about": {
+      "description": "Familiy Medications management and logging",
+      "version": "Version",
+      "developer": "Developer:",
+      "developerName": "Yossi Hauser",
+      "contact": "Contact",
+      "appNameLabel": "App Name",
+      "emailLabel": "Email"
+    },
+    "appTitle": "MedLog",
+    "guest": "Guest"
+  }

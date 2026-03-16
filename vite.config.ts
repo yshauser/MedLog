@@ -8,12 +8,4 @@ export default defineConfig({
       '@': '/src',
     },
   },
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3000', // or whatever port your Next.js API is running on
-        changeOrigin: true,
-      },
-    },
-  },
 });

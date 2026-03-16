@@ -1,10 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Trash2, Edit2, CheckCircle, XCircle, ArrowUpDown, Download, Upload, Save, FileX } from 'lucide-react';
 import { LogManager } from '../services/logManager';
+import { KidManager } from '../services/kidManager';
 import { LogEntry } from '../types';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { timeAndDateFormatter } from '../services/uiUtils';
+import { useAuth } from '../Users/AuthContext';
+
+const ADMIN_FAMILY_ID = 'admin-family';
 
 interface LogPageProps {
   logData: LogEntry[];
@@ -12,6 +16,7 @@ interface LogPageProps {
 }
 
 export const LogPage: React.FC<LogPageProps> = ({ logData, setLogData }) => {
+  const { user, getCurrentUserFamily } = useAuth();
   const [filters, setFilters] = useState({ date: '', name: '' });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedEntry, setEditedEntry] = useState<LogEntry | null>(null);
@@ -19,23 +24,39 @@ export const LogPage: React.FC<LogPageProps> = ({ logData, setLogData }) => {
   const [loadOption, setLoadOption] = useState('week'); // Default to week
 
   // Initial load of logs
-    useEffect(() => {
-      const fetchLogs = async () => {
-        const loadedLogs = await LogManager.loadLogs();
-        console.log ('Page-Logs use effect loaded logs', {loadedLogs, logData});
-          // Combine existing logData with loadedLogs and remove duplicates based on 'id'
-          const combinedLogsMap = new Map();
-          [...logData, ...loadedLogs].forEach(log => combinedLogsMap.set(log.id, log));
-          const combinedLogs = Array.from(combinedLogsMap.values());
-          const filteredData = filterLogsByDate(combinedLogs, loadOption);
-          setLogData(filteredData);
-          
-          const nameExists = filteredData.some(entry => entry.kidName === filters.name);
-          if (!nameExists) {setFilters(prev => ({...prev, name: ''}));} // name: '' appears in the UI with the label הכל
-        console.log ('Page-Logs use effect loaded filtered logs', {loadOption,filteredData});
-      };
-      fetchLogs().catch(error => console.error('Error in useEffect fetchLogs:', error));
-    }, [loadOption]);
+  useEffect(() => {
+    const fetchLogs = async () => {
+      const isAdminFamilyMember = user?.familyId === ADMIN_FAMILY_ID;
+
+      // Determine which kid names this user is allowed to see
+      let allowedKidNames: Set<string> | null = null;
+      if (!isAdminFamilyMember) {
+        const userFamily = getCurrentUserFamily();
+        const familyKids = userFamily
+          ? await KidManager.loadKidsByFamily(userFamily.id)
+          : [];
+        allowedKidNames = new Set(familyKids.map(k => k.name));
+      }
+
+      const loadedLogs = await LogManager.loadLogs();
+      // Combine existing logData with loadedLogs and remove duplicates based on 'id'
+      const combinedLogsMap = new Map();
+      [...logData, ...loadedLogs].forEach(log => combinedLogsMap.set(log.id, log));
+      const combinedLogs = Array.from(combinedLogsMap.values());
+
+      // Filter by family if not admin-family
+      const familyFilteredLogs = allowedKidNames
+        ? combinedLogs.filter(log => !log.kidName || allowedKidNames!.has(log.kidName))
+        : combinedLogs;
+
+      const filteredData = filterLogsByDate(familyFilteredLogs, loadOption);
+      setLogData(filteredData);
+      
+      const nameExists = filteredData.some(entry => entry.kidName === filters.name);
+      if (!nameExists) {setFilters(prev => ({...prev, name: ''}));}
+    };
+    fetchLogs().catch(error => console.error('Error in useEffect fetchLogs:', error));
+  }, [loadOption, user]);
 
   // Sort and filter the data
   const sortedAndFilteredData = useMemo(() => {

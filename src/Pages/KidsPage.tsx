@@ -8,10 +8,13 @@ import AddKidForm from '../Forms/AddKidForm.tsx';
 import { timeAndDateFormatter } from '../services/uiUtils.ts';
 import { addKid as addKidDoc, updateKid as updateKidDoc, deleteKid as deleteKidDoc, getKids, getFamilyNameByFamilyId, updateKidsOrder, updateUserKidOrder } from '../services/firestoreService';
 
+const ADMIN_FAMILY_ID = 'admin-family';
+
 export const KidsPage = () => {
-  const {user, getCurrentUserFamily, setUser } = useAuth(); // Get the logged-in user
+  const { user, getCurrentUserFamily, setUser, families } = useAuth();
   const [kids, setKids] = useState<Kid[]>([]);
   const [filteredKids, setFilteredKids] = useState<Kid[]>([]);
+  const [selectedFamilyFilter, setSelectedFamilyFilter] = useState<string>('all');
   const [newKid, setNewKid] = useState<Partial<Kid>>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -19,27 +22,28 @@ export const KidsPage = () => {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [kidToDelete, setKidToDelete] = useState<string | null>(null);
-  const authContext = useAuth();
 
-  // Filter kids based on user's family
-  const filterKidsForCurrentUser = (kidsData: Kid[]) => {
+  const isAdminFamilyMember = user?.familyId === ADMIN_FAMILY_ID;
+
+  const filterKidsForCurrentUser = (kidsData: Kid[], familyFilter = selectedFamilyFilter) => {
     if (!user) {
       setFilteredKids([]);
       return;
     }
-
-    if (user.role === 'admin' ) {
-      // Admins see all kids - for owners to see all -> add this to the if: || user.role === 'owner'
-      setFilteredKids(kidsData);
+    if (isAdminFamilyMember) {
+      // Admin-family members see all kids, optionally filtered by family
+      if (familyFilter && familyFilter !== 'all') {
+        setFilteredKids(kidsData.filter(kid => kid.familyId === familyFilter));
+      } else {
+        setFilteredKids(kidsData);
+      }
     } else {
-      // Regular users only see kids from their family
+      // Non-admin-family members see only their own family's kids
       const userFamily = getCurrentUserFamily();
       if (userFamily) {
-        const familyKids = kidsData.filter(kid => kid.familyId === userFamily.id);
-        setFilteredKids(familyKids);
-        // console.log ('filtered kids', {familyKids, userFamily, kidsData});
+        setFilteredKids(kidsData.filter(kid => kid.familyId === userFamily.id));
       } else {
-        setFilteredKids([]);
+        setFilteredKids(kidsData);
       }
     }
   };
@@ -207,7 +211,7 @@ export const KidsPage = () => {
         }
 
         setKids(sortedKids);
-        filterKidsForCurrentUser(sortedKids);
+        filterKidsForCurrentUser(sortedKids, selectedFamilyFilter);
       } catch (error) {
         console.error('Error in useEffect fetchKids:', error);
       }
@@ -218,7 +222,27 @@ export const KidsPage = () => {
   return (
     <main className="flex-1 flex flex-col items-center justify-center p-4 bg-white">
       <h1 className="text-2xl text-emerald-600 mb-6">ילדים</h1>
-      {user?.role === 'admin' || user?.role === 'owner' ? (
+      {isAdminFamilyMember && (
+        <div className="w-full max-w-2xl mb-4 flex items-center gap-3">
+          <label className="text-sm font-medium text-gray-700 whitespace-nowrap">סינון משפחה:</label>
+          <select
+            value={selectedFamilyFilter}
+            onChange={e => {
+              setSelectedFamilyFilter(e.target.value);
+              filterKidsForCurrentUser(kids, e.target.value);
+            }}
+            className="p-2 border rounded text-sm"
+          >
+            <option value="all">כל המשפחות</option>
+            {families
+              .filter(f => f.id !== ADMIN_FAMILY_ID)
+              .map(f => (
+                <option key={f.id} value={f.id}>{f.name}</option>
+              ))}
+          </select>
+        </div>
+      )}
+      {(user?.role === 'admin' || user?.role === 'owner') ? (
       <button
         onClick={() => setIsModalOpen(true)}
         className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 mb-4"

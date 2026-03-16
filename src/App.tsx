@@ -1,11 +1,15 @@
 import { BrowserRouter as Router } from 'react-router-dom';
 import { MainLayout } from './Layouts/MainLayout';
 import { AuthProvider } from './Users/AuthContext';
+import { useTranslation } from 'react-i18next';
+import './i18n/i18n';
 
 import MigrationRunner from './migration/MigrationRunner';
 
 // Main App component
 const App = () => {
+  // const {t, i18n} = useTranslation();
+
   return (
     <AuthProvider>
     <Router>

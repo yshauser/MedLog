@@ -127,26 +127,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (user) {
       localStorage.setItem('lastUser', JSON.stringify(user));
-      // console.log ('localStorage', localStorage.getItem('lastUser'), localStorage, user);
     } else {
-      // console.log ('clearing last user', {user})
-      const lastUser = localStorage.getItem('lastUser');
-      // console.log ('loading from local storage', localStorage.getItem('lastUser'), localStorage);
-      if (lastUser) {
-        try {
-          const storedUser = JSON.parse(lastUser);
-          // Check if user still exists in the loaded users data from Firebase
-            setUser(storedUser || null);
-            // User no longer exists in Firebase, clear localStorage
-            console.log ('clearing 2 last user')
-            localStorage.removeItem('lastUser');
-
-        } catch (error) {
-          console.error('Error parsing stored user:', error);
-          localStorage.removeItem('lastUser');
-        }
-    }
-      // localStorage.removeItem('lastUser');
+      localStorage.removeItem('lastUser');
     }
   }, [user]);
 

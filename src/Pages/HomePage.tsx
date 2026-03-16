@@ -3,6 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { MedicineDialog } from '../components/MedicineDialog';
 import { KidManager } from '../services/kidManager';
 import { LogEntry, Kid } from '../types';
+import { useAuth } from '../Users/AuthContext';
+
+const ADMIN_FAMILY_ID = 'admin-family';
 
 interface HomePageProps {
   logData: LogEntry[];
@@ -10,6 +13,7 @@ interface HomePageProps {
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ logData, setLogData }) => {
+  const { user, getCurrentUserFamily } = useAuth();
   const [selectedKid, setSelectedKid] = useState<Kid | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
@@ -17,11 +21,33 @@ export const HomePage: React.FC<HomePageProps> = ({ logData, setLogData }) => {
 
   useEffect(() => {
     const loadKids = async () => {
-      const loadedKids = await KidManager.loadKids();
+      const isAdminFamilyMember = user?.familyId === ADMIN_FAMILY_ID;
+      let loadedKids: Kid[];
+
+      if (isAdminFamilyMember) {
+        loadedKids = await KidManager.loadKids();
+      } else {
+        const userFamily = getCurrentUserFamily();
+        loadedKids = userFamily
+          ? await KidManager.loadKidsByFamily(userFamily.id)
+          : [];
+      }
+
+      // Sort by user's kidOrder if available
+      if (user?.kidOrder?.length) {
+        loadedKids.sort((a, b) => {
+          const indexA = user.kidOrder!.indexOf(a.id);
+          const indexB = user.kidOrder!.indexOf(b.id);
+          if (indexA === -1) return 1;
+          if (indexB === -1) return -1;
+          return indexA - indexB;
+        });
+      }
+
       setKids(loadedKids);
     };
     loadKids();
-  }, []);
+  }, [user]);
 
   const handleKidClick = (kid: Kid) => {
     console.log ('home page, handle kid click', {kid});

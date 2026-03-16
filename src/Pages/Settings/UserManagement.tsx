@@ -17,43 +17,36 @@ export const UserManagement = () => {
   const [showNewFamilyInput, setShowNewFamilyInput] = useState(false);
   const authContext = useAuth();
 
-  // console.log("Auth Context:", authContext);
-  // console.log ('user management', {user, users, families});
-
-  // if (!user || (user.role !== 'admin'&& user.role !== 'owner' )) {
-  if (!user ) {
-    console.log ('users table', {user})
-    return <div>גישה נדחתה</div>;
-  }
-
-  useEffect(() => {
-    const availableRoles = getAvailableRoles();
-    if (!availableRoles.includes(newUser.role)) {
-      setNewUser({ ...newUser, role: availableRoles[0] }); // Set to the first available role
-    }
-  }, [showNewFamilyInput]); // Runs when showNewFamilyInput changes
-
   // Function to get available roles based on current user's role
   const getAvailableRoles = () => {
-    if (user.role === 'owner') {
+    if (user?.role === 'owner') {
       return ['owner', 'user'];
     }
-    if (showNewFamilyInput){
+    if (showNewFamilyInput) {
       return ['owner'];
     }
     return ['owner', 'admin', 'user'];
   };
 
+  useEffect(() => {
+    const availableRoles = getAvailableRoles();
+    if (!availableRoles.includes(newUser.role)) {
+      setNewUser(prev => ({ ...prev, role: availableRoles[0] }));
+    }
+  }, [showNewFamilyInput]);
+
+  if (!user) {
+    return <div>גישה נדחתה</div>;
+  }
+
   // Filter displayed users based on current user's role
   const getFilteredUsers = () => {
-    if (user.role === 'owner') {
-      // console.log ('getFilteredUsers - owner',{user},users.filter(u => 
-      //   (u.role === 'owner' || u.role === 'user') &&u.familyId === user.familyId) );
+    if (user?.role === 'owner') {
       return users.filter(u => 
         (u.role === 'owner' || u.role === 'user') &&
         u.familyId === user.familyId
       );
-    } else if (user.role === 'user') {
+    } else if (user?.role === 'user') {
       return users.filter(u => 
         u.role === 'user' && u.familyId === user.familyId && u.username === user.username
       );

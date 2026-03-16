@@ -2,6 +2,7 @@ import {
   collection, 
   getDocs, 
   doc, 
+  getDoc,
   setDoc, 
   deleteDoc, 
   query, 
@@ -30,12 +31,9 @@ export const getCollection = async <T>(collectionName: string): Promise<T[]> => 
 
 export const getFamilyNameByFamilyId = async (familyId: string): Promise<string | undefined> => {
   try {
-    const q = query(collection(db, 'families'), where('id', '==', familyId));
-    const querySnapshot = await getDocs(q);
-
-    if (!querySnapshot.empty) {
-      // Assuming family name is stored in a field called 'name'
-      return querySnapshot.docs[0].data().name as string;
+    const familyDoc = await getDoc(doc(db, 'families', familyId));
+    if (familyDoc.exists()) {
+      return familyDoc.data().name as string;
     } else {
       console.log(`No family found with id: ${familyId}`);
       return undefined;

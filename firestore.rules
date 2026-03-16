@@ -1,19 +1,44 @@
 rules_version = '2';
 
+// NOTE: This app currently uses username-based authentication (no Firebase Auth).
+// Because request.auth is always null, rules cannot be scoped per user.
+// When Firebase Auth is added in the future, replace these rules with
+// role-based rules using request.auth.uid and user document lookups.
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // This rule allows anyone with your Firestore database reference to view, edit,
-    // and delete all data in your Firestore database. It is useful for getting
-    // started, but it is configured to expire after 30 days because it
-    // leaves your app open to attackers. At that time, all client
-    // requests to your Firestore database will be denied.
-    //
-    // Make sure to write security rules for your app before that time, or else
-    // all client requests to your Firestore database will be denied until you Update
-    // your rules
-    match /{document=**} {
-      allow read, write: if request.time < timestamp.date(2025, 5, 15);
+    // Medicine reference data and metadata — read-only for all clients
+    match /medicines/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /metadata/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Operational collections — open read/write until Firebase Auth is implemented.
+    // TODO: Restrict these with proper auth rules once Firebase Auth is added.
+    match /kids/{docId} {
+      allow read, write: if true;
+    }
+
+    match /logs/{docId} {
+      allow read, write: if true;
+    }
+
+    match /tasks/{docId} {
+      allow read, write: if true;
+    }
+
+    match /users/{docId} {
+      allow read, write: if true;
+    }
+
+    match /families/{docId} {
+      allow read, write: if true;
     }
   }
 }

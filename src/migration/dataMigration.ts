@@ -1,21 +1,7 @@
 // dataMigration.ts
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, doc, setDoc, writeBatch } from 'firebase/firestore';
+import { collection, doc, setDoc, writeBatch } from 'firebase/firestore';
+import { db } from '../firebase';
 import medicinesData from './medicines.json'; // Adjust path as needed
-
-// Your Firebase config (replace with your actual config)
-const firebaseConfig = {
-  apiKey: "AIzaSyA0fMTn7yyQoYK8EKJIJLkknNXsrAuycp4",
-  authDomain: "trufoti-aad54.firebaseapp.com",
-  projectId: "trufoti-aad54",
-  storageBucket: "trufoti-aad54.firebasestorage.app",
-  messagingSenderId: "286518797333",
-  appId: "1:286518797333:web:cab903542053a0ca741a1c",
-  measurementId: "G-B3XL1K961N"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
 interface MedicineDocument {
   id: string;

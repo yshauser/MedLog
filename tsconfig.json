@@ -10,7 +10,8 @@
       "allowImportingTsExtensions": true,
       "noEmit": true,
       "forceConsistentCasingInFileNames": true,
-      "resolveJsonModule": true
+      "resolveJsonModule": true,
+      "types": ["vite/client"]
     },
     "include": ["src", "src/custom.d.ts"]
   }

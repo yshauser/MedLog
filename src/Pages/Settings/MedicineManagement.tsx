@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Trash2, Edit2, Plus, ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react';
 import { MedicineManager, MedicineGroup } from '../../services/medicineManager';
-import AddMedicineForm from '../Medicines/AddMedicineForm';
+import AddMedicineForm from '../../Forms/AddMedicineForm';
 import { Medicine, MedicineType, TargetAudience, SuspensionMedicine, CapletMedicine, GranulesMedicine } from '../../types';
 
 type SortField = 'name' | 'activeIngredient' | 'type' | 'targetAudience';
