@@ -51,7 +51,7 @@ const LoginDialog = ({ onClose }: { onClose: () => void }) => {
           {googleLoading ? 'מתחבר...' : 'כניסה עם Google'}
         </button>
 
-        {import.meta.env.VITE_APP_ENV !== 'production' && (
+        {import.meta.env.VITE_APP_ENV === 'development' && (
           <>
             <div className="flex items-center gap-2 mb-4">
               <div className="flex-1 h-px bg-gray-200" />

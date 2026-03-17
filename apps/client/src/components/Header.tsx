@@ -113,8 +113,8 @@ export const Header = () => {
                 className="bg-transparent border-none text-gray-600 p-1 rounded cursor-pointer flex items-center transition-colors duration-200"
                 onClick={toggleLang}
               >
-                <span>{i18n.language.toUpperCase()}</span>
-                <img src={i18n.language === 'he' ? ilFlag : ukFlag} alt="flag" className="w-5 h-5 mr-1" />
+                <span>{i18n.language.startsWith('he') ? 'HE' : 'EN'}</span>
+                <img src={i18n.language.startsWith('he') ? ilFlag : ukFlag} alt="flag" className="w-5 h-5 mr-1" />
               </button>
 
               {isLangOpen && (
