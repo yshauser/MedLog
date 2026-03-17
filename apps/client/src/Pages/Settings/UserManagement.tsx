@@ -62,8 +62,8 @@ export const UserManagement = () => {
   const showEmailColumn = user.role === 'admin';
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl mb-4">ניהול משתמשים</h1>
+    <div className="p-3">
+      <h1 className="text-xl mb-4">ניהול משתמשים</h1>
 
       {/* Tabs - only show for admin */}
       {user.role === 'admin' && (
@@ -108,14 +108,15 @@ export const UserManagement = () => {
             )}
           </div>
 
-          <table className="w-full border-collapse border border-gray-300">
+          <div className="overflow-x-auto">
+          <table className="w-full border-collapse border border-gray-300 text-sm">
         <thead>
-          <tr className="bg-gray-100">
-            {user.role === 'admin' && <th className="border p-2">משפחה</th>}
-            <th className="border p-2">שם</th>
-            <th className="border p-2">תפקיד</th>
-            {showEmailColumn && <th className="border p-2">אימייל</th>}
-            <th className="border p-2">פעולות</th>
+          <tr className="bg-emerald-50">
+            {user.role === 'admin' && <th className="border p-1.5 whitespace-nowrap">משפחה</th>}
+            <th className="border p-1.5 whitespace-nowrap">שם</th>
+            <th className="border p-1.5 whitespace-nowrap">תפקיד</th>
+            {showEmailColumn && <th className="border p-1.5 whitespace-nowrap">אימייל</th>}
+            <th className="border p-1.5 whitespace-nowrap">פעולות</th>
           </tr>
         </thead>
         <tbody>
@@ -123,14 +124,14 @@ export const UserManagement = () => {
             <React.Fragment key={`user-${userItem.username}`}>
               <tr className="border">
                 {user.role === 'admin' && (
-                  <td className="border p-2">
+                  <td className="border p-1.5 whitespace-nowrap">
                     {getUserFamily(userItem.username)?.name || 'N/A'}
                   </td>
                 )}
-                <td className="border p-2">{userItem.username}</td>
-                <td className="border p-2">{userItem.role}</td>
+                <td className="border p-1.5 whitespace-nowrap">{userItem.username}</td>
+                <td className="border p-1.5 whitespace-nowrap">{userItem.role}</td>
                 {showEmailColumn && (
-                  <td className="border p-2 text-sm text-gray-600">
+                  <td className="border p-1.5 max-w-[120px] truncate text-xs text-gray-600" title={userItem.email || ''}>
                     {userItem.email || '—'}
                   </td>
                 )}
@@ -175,6 +176,7 @@ export const UserManagement = () => {
           ))}
         </tbody>
       </table>
+      </div>
 
           {dialogOpen && (
             <UserFormDialog

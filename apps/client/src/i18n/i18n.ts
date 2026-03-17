@@ -26,7 +26,7 @@ i18n
   .init({
     resources,
     fallbackLng: 'he', // Default language
-    debug: process.env.NODE_ENV === 'development',
+    debug: import.meta.env.DEV,
     interpolation: {
       escapeValue: false, // React already escapes values
     },
@@ -34,5 +34,7 @@ i18n
       useSuspense: false // Prevents issues with SSR
     }
   });
+
+document.documentElement.dir = i18n.language.startsWith('he') ? 'rtl' : 'ltr';
 
 export default i18n;

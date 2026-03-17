@@ -15,11 +15,15 @@ interface HomePageProps {
 
 export const HomePage: React.FC<HomePageProps> = ({ logData, setLogData }) => {
   const { t } = useTranslation();
-  const { user, getCurrentUserFamily } = useAuth();
+  const { user, getCurrentUserFamily, families } = useAuth();
   const [selectedKid, setSelectedKid] = useState<Kid | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [kids, setKids] = useState<Kid[]>([]);
+  const [selectedFamilyFilter, setSelectedFamilyFilter] = useState<string>('all');
+  const [filteredKids, setFilteredKids] = useState<Kid[]>([]);
+
+  const isAdminFamilyMember = user?.familyId === ADMIN_FAMILY_ID;
 
   useEffect(() => {
     const loadKids = async () => {
@@ -51,6 +55,14 @@ export const HomePage: React.FC<HomePageProps> = ({ logData, setLogData }) => {
     loadKids();
   }, [user]);
 
+  useEffect(() => {
+    if (user?.familyId === ADMIN_FAMILY_ID && selectedFamilyFilter !== 'all') {
+      setFilteredKids(kids.filter(k => k.familyId === selectedFamilyFilter));
+    } else {
+      setFilteredKids(kids);
+    }
+  }, [kids, selectedFamilyFilter]);
+
   const handleKidClick = (kid: Kid) => {
     console.log ('home page, handle kid click', {kid});
     setSelectedKid(kid);
@@ -59,9 +71,25 @@ export const HomePage: React.FC<HomePageProps> = ({ logData, setLogData }) => {
 
   return (
     <main className="flex-1 flex flex-col items-center justify-center p-4 bg-white">
-      {/* <div className="flex flex-col sm:flex-row gap-4 mb-8 w-full max-w-xs sm:max-w-md"> */}
+      {isAdminFamilyMember && (
+        <div className="w-full max-w-2xl mb-4 flex items-center gap-3">
+          <label className="text-sm font-medium text-gray-700 whitespace-nowrap">{t('kids.filterFamily')}</label>
+          <select
+            value={selectedFamilyFilter}
+            onChange={e => setSelectedFamilyFilter(e.target.value)}
+            className="p-2 border rounded text-sm"
+          >
+            <option value="all">{t('kids.allFamilies')}</option>
+            {families
+              .filter(f => f.id !== ADMIN_FAMILY_ID)
+              .map(f => (
+                <option key={f.id} value={f.id}>{f.name}</option>
+              ))}
+          </select>
+        </div>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full max-w-4xl mb-8">
-        {kids.map((kid,index) => (
+        {filteredKids.map((kid,index) => (
           <button
             key={kid.id || index}
             onClick={() => handleKidClick(kid)}

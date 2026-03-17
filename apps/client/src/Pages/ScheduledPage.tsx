@@ -201,7 +201,7 @@ const ScheduledPage = () => {
         <h1 className="text-2xl font-bold">משימות מתוזמנות</h1>
         <button
           onClick={() => setIsFormOpen(true)}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+          className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
         >
           הוסף תרופה תקופתית
         </button>
@@ -224,8 +224,8 @@ const ScheduledPage = () => {
               onClick={() => handleFilterChange(option)}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 currentFilter === option 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? 'bg-emerald-600 text-white' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               {option}
@@ -241,7 +241,7 @@ const ScheduledPage = () => {
 
         <table className="min-w-full bg-white border border-gray-200">
           <thead>
-            <tr className="bg-gray-50">
+            <tr className="bg-emerald-50">
               <th className="px-1 py-3 border-b text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 פעולות
               </th>
@@ -269,7 +269,7 @@ const ScheduledPage = () => {
                       onClick={() => handleTaskCalendar(task)}
                       className="hover:bg-gray-100 p-1 rounded-full transition-colors"
                       >
-                      <CalendarCheck size={16} className="text-blue-500" />
+                      <CalendarCheck size={16} className="text-emerald-600" />
                     </button>
                     {showCalendar && selectedTask && selectedTask.id === task.id && (
                       <div>
@@ -307,7 +307,7 @@ const ScheduledPage = () => {
                               onClick={() => handleEditTask(task)}
                               className="hover:bg-gray-100 p-1 rounded-full transition-colors"
                               >
-                              <Pencil size={16} className="text-blue-500" />
+                              <Pencil size={16} className="text-emerald-600" />
                             </button>
                             <button 
                               className="hover:bg-gray-100 p-1 rounded-full transition-colors"
