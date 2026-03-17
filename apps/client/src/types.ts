@@ -145,3 +145,19 @@ export interface CapsulesMedicine extends MedicineBase {
 }
 
 export type Medicine = SuspensionMedicine | CapletMedicine | GranulesMedicine | CapsulesMedicine;
+
+////////////////////////////
+//// Registration   ////////
+////////////////////////////
+export interface RegistrationRequest {
+  id: string;
+  username: string;
+  email: string;
+  familyName: string;
+  notes?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  timestamp: Date;
+  reviewedBy?: string;
+  reviewedAt?: Date;
+  rejectionReason?: string;
+}

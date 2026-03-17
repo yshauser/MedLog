@@ -1,13 +1,16 @@
 {
   "name": "medlog",
   "private": true,
-  "version": "1.1.02",
+  "version": "1.2.01",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "npm run build && firebase deploy --only hosting",
+    "deploy:rules": "firebase deploy --only firestore:rules",
+    "deploy:all": "npm run build && firebase deploy"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.15",

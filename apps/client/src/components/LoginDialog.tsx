@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../Users/AuthContext';
 
 const LoginDialog = ({ onClose }: { onClose: () => void }) => {
@@ -79,6 +80,14 @@ const LoginDialog = ({ onClose }: { onClose: () => void }) => {
             כניסה
           </button>
           <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">ביטול</button>
+        </div>
+
+        {/* Registration Link */}
+        <div className="text-center text-sm text-gray-600 mt-4">
+          אין לך חשבון?{' '}
+          <Link to="/register" className="text-blue-500 hover:underline">
+            הירשם כאן
+          </Link>
         </div>
       </div>
     </div>

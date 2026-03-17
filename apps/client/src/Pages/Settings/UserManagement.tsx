@@ -3,9 +3,13 @@ import React, { useState } from 'react';
 import { useAuth, User } from '../../Users/AuthContext';
 import { Pencil, Trash } from 'lucide-react';
 import UserFormDialog from '../../components/UserFormDialog';
+import RegistrationReview from '../../components/RegistrationReview';
+
+type TabType = 'users' | 'registrations';
 
 export const UserManagement = () => {
   const { user, users, getUserFamily, removeUser: contextRemoveUser } = useAuth();
+  const [activeTab, setActiveTab] = useState<TabType>('users');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [confirmDeleteUsername, setConfirmDeleteUsername] = useState<string | null>(null);
@@ -59,19 +63,52 @@ export const UserManagement = () => {
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl">ניהול משתמשים</h1>
-        {user.role !== 'user' && (
-          <button
-            onClick={handleAdd}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-          >
-            הוסף משתמש
-          </button>
-        )}
-      </div>
+      <h1 className="text-2xl mb-4">ניהול משתמשים</h1>
 
-      <table className="w-full border-collapse border border-gray-300">
+      {/* Tabs - only show for admin */}
+      {user.role === 'admin' && (
+        <div className="flex gap-2 mb-6 border-b">
+          <button
+            onClick={() => setActiveTab('users')}
+            className={`px-4 py-2 font-medium transition-colors ${
+              activeTab === 'users'
+                ? 'border-b-2 border-blue-500 text-blue-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            משתמשים
+          </button>
+          <button
+            onClick={() => setActiveTab('registrations')}
+            className={`px-4 py-2 font-medium transition-colors ${
+              activeTab === 'registrations'
+                ? 'border-b-2 border-blue-500 text-blue-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            בקשות הרשמה
+          </button>
+        </div>
+      )}
+
+      {/* Registration Requests Tab */}
+      {activeTab === 'registrations' && user.role === 'admin' ? (
+        <RegistrationReview />
+      ) : (
+        <>
+          {/* Users Tab */}
+          <div className="flex items-center justify-between mb-4">
+            {user.role !== 'user' && (
+              <button
+                onClick={handleAdd}
+                className="bg-blue-500 text-white px-4 py-2 rounded ml-auto"
+              >
+                הוסף משתמש
+              </button>
+            )}
+          </div>
+
+          <table className="w-full border-collapse border border-gray-300">
         <thead>
           <tr className="bg-gray-100">
             {user.role === 'admin' && <th className="border p-2">משפחה</th>}
@@ -139,11 +176,13 @@ export const UserManagement = () => {
         </tbody>
       </table>
 
-      {dialogOpen && (
-        <UserFormDialog
-          editingUser={editingUser}
-          onClose={handleCloseDialog}
-        />
+          {dialogOpen && (
+            <UserFormDialog
+              editingUser={editingUser}
+              onClose={handleCloseDialog}
+            />
+          )}
+        </>
       )}
     </div>
   );
