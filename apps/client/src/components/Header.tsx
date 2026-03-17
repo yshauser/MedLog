@@ -137,7 +137,7 @@ export const Header = () => {
                 </div>
               )}
             </div>
-            <span className="text-sm text-gray-600">{user?.username || 'admin'}</span>
+            <span className="text-sm text-gray-600">{user?.username || ''}</span>
           </div>
         </div>
       </div>

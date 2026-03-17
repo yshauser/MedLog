@@ -51,36 +51,40 @@ const LoginDialog = ({ onClose }: { onClose: () => void }) => {
           {googleLoading ? 'מתחבר...' : 'כניסה עם Google'}
         </button>
 
-        <div className="flex items-center gap-2 mb-4">
-          <div className="flex-1 h-px bg-gray-200" />
-          <span className="text-xs text-gray-400">או משתמש בדיקה</span>
-          <div className="flex-1 h-px bg-gray-200" />
-        </div>
+        {import.meta.env.VITE_APP_ENV !== 'production' && (
+          <>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="flex-1 h-px bg-gray-200" />
+              <span className="text-xs text-gray-400">או משתמש בדיקה</span>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
 
-        {/* Test user username login */}
-        <input
-          type="text"
-          placeholder="הכנס שם משתמש"
-          value={username}
-          onChange={(e) => { setUsername(e.target.value); setError(''); }}
-          onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-          className="border p-2 w-full rounded mb-2"
-        />
+            {/* Test user username login */}
+            <input
+              type="text"
+              placeholder="הכנס שם משתמש"
+              value={username}
+              onChange={(e) => { setUsername(e.target.value); setError(''); }}
+              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+              className="border p-2 w-full rounded mb-2"
+            />
 
-        {error && (
-          <p className="text-red-500 text-sm mb-2">{error}</p>
+            <div className="flex justify-center gap-3 mt-2">
+              <button
+                onClick={handleLogin}
+                disabled={!username.trim()}
+                className="px-4 py-2 bg-emerald-600 text-white rounded disabled:opacity-40"
+              >
+                כניסה
+              </button>
+              <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">ביטול</button>
+            </div>
+          </>
         )}
 
-        <div className="flex justify-center gap-3 mt-2">
-          <button
-            onClick={handleLogin}
-            disabled={!username.trim()}
-            className="px-4 py-2 bg-emerald-600 text-white rounded disabled:opacity-40"
-          >
-            כניסה
-          </button>
-          <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">ביטול</button>
-        </div>
+        {error && (
+          <p className="text-red-500 text-sm mt-2">{error}</p>
+        )}
 
         {/* Registration Link */}
         <div className="text-center text-sm text-gray-600 mt-4">
