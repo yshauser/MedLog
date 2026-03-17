@@ -7,13 +7,13 @@ interface UserData {
   username: string;
   role: 'owner' | 'admin' | 'user';
 }
-interface User extends UserData {
+export interface User extends UserData {
   familyId: string;
   kidOrder: string[] | undefined;
   email?: string;
   authProvider?: 'google' | 'test';
 }
-interface Family {
+export interface Family {
   id: string;
   name: string;
   ownerId: string; //username of the owner (TBD change to list)
@@ -27,6 +27,7 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<{ success: boolean, message?: string }>;
   logout: () => Promise<void>;
   addUser: (user: Omit<User, 'familyId'> & { familyId?: string, familyName?: string }) => Promise<void>;
+  updateUser: (username: string, fields: Partial<Pick<User, 'email' | 'role' | 'familyId'>>) => Promise<void>;
   getUserFamily: (username: string) => Family | undefined;
   getCurrentUserFamily: () => Family | undefined;
   removeUser: (username: string) => Promise<void>;
@@ -299,6 +300,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateUser = async (username: string, fields: Partial<Pick<User, 'email' | 'role' | 'familyId'>>) => {
+    const userRef = doc(db, 'users', username);
+    const updateData: Record<string, any> = {};
+    if (fields.email !== undefined) {
+      updateData.email = fields.email;
+      updateData.authProvider = fields.email ? 'google' : 'test';
+    }
+    if (fields.role !== undefined) updateData.role = fields.role;
+    if (fields.familyId !== undefined) updateData.familyId = fields.familyId;
+
+    await setDoc(userRef, updateData, { merge: true });
+
+    // If role changed to owner, update family.ownerId
+    if (fields.role === 'owner' && fields.familyId) {
+      const familyRef = doc(db, 'families', fields.familyId);
+      await setDoc(familyRef, { ownerId: username }, { merge: true });
+      setFamilies(prev => prev.map(f => f.id === fields.familyId ? { ...f, ownerId: username } : f));
+    }
+
+    setUsers(prev => prev.map(u => {
+      if (u.username !== username) return u;
+      const updated = { ...u, ...fields };
+      if (fields.email !== undefined) {
+        updated.authProvider = fields.email ? 'google' : 'test';
+      }
+      return updated;
+    }));
+  };
+
   const removeUser = async (username: string) => {
     try {
       // Delete user from Firestore
@@ -320,7 +350,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return (
     <AuthContext.Provider value={{
       user, users, families,
-      login, loginWithGoogle, logout, addUser, getUserFamily, getCurrentUserFamily, removeUser,
+      login, loginWithGoogle, logout, addUser, updateUser, getUserFamily, getCurrentUserFamily, removeUser,
       setUser
     }}>
       {children}

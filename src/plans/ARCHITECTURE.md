@@ -246,5 +246,6 @@ src/
 - [x] **Add proper authentication** — Google Sign-In via Firebase Auth; test users retain username-only login; `User` model extended with `email?` and `authProvider?`; login dialog auto-shown when no session; Firestore rules tightened to `request.auth != null`
 - [x] **Remove hardcoded API keys** — `dataMigration.ts` now imports shared `db` from `firebase.js`
 - [x] **Clean up `vite.config.ts`** — removed unused `/api` proxy config
+- [x] **Improve UserManagement** — modal form for create/edit (`UserFormDialog`), inline delete confirmation, email column, exported `User`/`Family` types from `AuthContext`, added `updateUser()`, removed dead code
 - [ ] **Add tests** — unit tests for services, component tests for key pages
 - [ ] **Other**: _____

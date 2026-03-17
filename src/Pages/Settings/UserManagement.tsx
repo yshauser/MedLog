@@ -1,219 +1,150 @@
 //src/pages/Settings/UserManagement.tsx
-import React, { useState, useEffect } from 'react';
-import { useAuth} from '../../Users/AuthContext';
+import React, { useState } from 'react';
+import { useAuth, User } from '../../Users/AuthContext';
 import { Pencil, Trash } from 'lucide-react';
-
-
-interface User {
-  familyId?: string;
-  username: string;
-  role: 'owner' | 'admin' | 'user';
-}
-
+import UserFormDialog from '../../components/UserFormDialog';
 
 export const UserManagement = () => {
-  const { user, users, families, addUser: contextAddUser, getUserFamily, removeUser: contextRemoveUser } = useAuth();
-  const [newUser, setNewUser] = useState({ username: '', role: 'user', familyId: '', familyName: '', email: '' });
-  const [showNewFamilyInput, setShowNewFamilyInput] = useState(false);
-  const authContext = useAuth();
-
-  // Function to get available roles based on current user's role
-  const getAvailableRoles = () => {
-    if (user?.role === 'owner') {
-      return ['owner', 'user'];
-    }
-    if (showNewFamilyInput) {
-      return ['owner'];
-    }
-    return ['owner', 'admin', 'user'];
-  };
-
-  useEffect(() => {
-    const availableRoles = getAvailableRoles();
-    if (!availableRoles.includes(newUser.role)) {
-      setNewUser(prev => ({ ...prev, role: availableRoles[0] }));
-    }
-  }, [showNewFamilyInput]);
+  const { user, users, getUserFamily, removeUser: contextRemoveUser } = useAuth();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [confirmDeleteUsername, setConfirmDeleteUsername] = useState<string | null>(null);
 
   if (!user) {
     return <div>גישה נדחתה</div>;
   }
 
-  // Filter displayed users based on current user's role
   const getFilteredUsers = () => {
     if (user?.role === 'owner') {
-      return users.filter(u => 
+      return users.filter(u =>
         (u.role === 'owner' || u.role === 'user') &&
         u.familyId === user.familyId
       );
     } else if (user?.role === 'user') {
-      return users.filter(u => 
+      return users.filter(u =>
         u.role === 'user' && u.familyId === user.familyId && u.username === user.username
       );
     }
-    // console.log ('getFilteredUsers - else',{user, users} );
     return users;
   };
 
-  const addUser = () => {
-    // console.log ('UM add user', {newUser});
-    if (!newUser.username.trim()) return;
-    
-    const userToAdd = { 
-      username: newUser.username, 
-      role: newUser.role as 'owner' | 'admin' | 'user',
-      familyId: showNewFamilyInput ? undefined : newUser.familyId,
-      familyName: showNewFamilyInput ? newUser.familyName : undefined,
-      email: newUser.email.trim() || undefined,
-      kidOrder: undefined
-    };
-    // console.log ('UM userToAdd', {userToAdd, families, showNewFamilyInput})
-
-    contextAddUser(userToAdd);
-    setNewUser({ username: '', role: 'user', familyId: '', familyName: '', email: '' }); // Reset input
-    setShowNewFamilyInput (false);
+  const handleEdit = (userItem: User) => {
+    setEditingUser(userItem);
+    setDialogOpen(true);
   };
 
+  const handleAdd = () => {
+    setEditingUser(null);
+    setDialogOpen(true);
+  };
 
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setEditingUser(null);
+  };
 
-  const removeUser = async (username: string) => {
+  const handleDeleteConfirm = async (username: string) => {
     try {
       await contextRemoveUser(username);
     } catch (error) {
       console.error('Failed to remove user:', error);
     }
+    setConfirmDeleteUsername(null);
   };
 
-  const updateUserRole = (id: number, role: 'owner' | 'admin' | 'user') => {
-    // setUsers(users.map(user => user.id === id ? { ...user, role } : user));
-    // setEditingUser(null);
-  };
+  const isEditable = (userItem: User) =>
+    userItem.username !== 'admin' && userItem.username !== user.username;
+
+  const showEmailColumn = user.role === 'admin';
 
   return (
     <div className="p-6">
-      {user.role != 'user' && (
-          <>
-        <h1 className="text-2xl mb-4">ניהול משתמשים</h1>
-        <div className="space-y-2 mb-2">
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="שם משתמש"
-                value={newUser.username}
-                onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
-                className="w-full p-2 border rounded"
-                />
-              <input
-                type="email"
-                placeholder="אימייל (Google, אופציונלי)"
-                value={newUser.email}
-                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                className="w-full p-2 border rounded mt-2"
-                />
-            </div>
-            <div className="flex-1">
-              <select
-                value={newUser.role}
-                onChange={(e) => setNewUser({ ...newUser, role: e.target.value as User['role'] })}
-                className="w-full p-2 border rounded"
-                >
-                {getAvailableRoles().map(role => (
-                  <option key={`role-${role}`} value={role}>{role}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          {user.role === 'admin' && (
-            <>
-              <div className="flex gap-4 items-center">
-              <div className="flex-1">
-                <input
-                  type="checkbox"
-                  checked={showNewFamilyInput}
-                  onChange={(e) => setShowNewFamilyInput(e.target.checked)}
-                  className="mr-2"
-                  />
-                  <label className="mr-2">משפחה חדשה</label>
-                </div>
-              {showNewFamilyInput ? (
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    placeholder="שם משפחה חדש"
-                    value={newUser.familyName}
-                    onChange={(e) => setNewUser({ ...newUser, familyName: e.target.value})}
-                    className="w-full p-2 border rounded"
-                  />
-                </div>
-              ) : (
-                <div className="flex-1">
-                  <select
-                    value={newUser.familyId}
-                    onChange={(e) => setNewUser({ ...newUser, familyId: e.target.value })}
-                    className="w-full p-2 border rounded"
-                  >
-                    <option value="">בחר משפחה</option>
-                    {families.map(family => (
-                      <option key={`family-${family.id}`} value={family.id}>
-                        {family.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-          </>
-          )}
-        </div>
-        <div className="flex justify-end space-x-2 mb-3">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl">ניהול משתמשים</h1>
+        {user.role !== 'user' && (
           <button
-            onClick={addUser} 
-            className="bg-blue-500 text-white p-2"
-            disabled={!newUser.username || (user.role === 'admin' && !showNewFamilyInput && !newUser.familyId)}
-            >הוסף</button>
-        </div>
-      </> 
-      )} 
-
+            onClick={handleAdd}
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            הוסף משתמש
+          </button>
+        )}
+      </div>
 
       <table className="w-full border-collapse border border-gray-300">
         <thead>
           <tr className="bg-gray-100">
-            {user.role === 'admin' && <th className="border p-2">משפחה</th>} 
+            {user.role === 'admin' && <th className="border p-2">משפחה</th>}
             <th className="border p-2">שם</th>
             <th className="border p-2">תפקיד</th>
+            {showEmailColumn && <th className="border p-2">אימייל</th>}
             <th className="border p-2">פעולות</th>
           </tr>
         </thead>
         <tbody>
           {getFilteredUsers().map((userItem) => (
-            <tr key={`user-${userItem.username}`} className="border">
-              {user.role === 'admin' && (
+            <React.Fragment key={`user-${userItem.username}`}>
+              <tr className="border">
+                {user.role === 'admin' && (
+                  <td className="border p-2">
+                    {getUserFamily(userItem.username)?.name || 'N/A'}
+                  </td>
+                )}
+                <td className="border p-2">{userItem.username}</td>
+                <td className="border p-2">{userItem.role}</td>
+                {showEmailColumn && (
+                  <td className="border p-2 text-sm text-gray-600">
+                    {userItem.email || '—'}
+                  </td>
+                )}
                 <td className="border p-2">
-                  {getUserFamily(userItem.username)?.name || 'N/A'}
+                  {isEditable(userItem) ? (
+                    <div className="flex w-full h-full justify-center items-center gap-4">
+                      <button onClick={() => handleEdit(userItem)}>
+                        <Pencil size={16} className="text-blue-500" />
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteUsername(userItem.username)}
+                        className="hover:text-red-700"
+                      >
+                        <Trash size={16} className="text-red-500" />
+                      </button>
+                    </div>
+                  ) : null}
                 </td>
+              </tr>
+              {confirmDeleteUsername === userItem.username && (
+                <tr className="bg-red-50 border border-red-200">
+                  <td colSpan={showEmailColumn ? (user.role === 'admin' ? 5 : 4) : (user.role === 'admin' ? 4 : 3)} className="p-2 text-sm">
+                    <div className="flex items-center gap-3">
+                      <span>למחוק את <strong>{userItem.username}</strong>?</span>
+                      <button
+                        onClick={() => handleDeleteConfirm(userItem.username)}
+                        className="px-3 py-1 bg-red-500 text-white rounded text-xs"
+                      >
+                        מחק
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteUsername(null)}
+                        className="px-3 py-1 bg-gray-300 rounded text-xs"
+                      >
+                        ביטול
+                      </button>
+                    </div>
+                  </td>
+                </tr>
               )}
-              <td className="border p-2">{userItem.username}</td>
-              <td className="border p-2">{userItem.role}</td>
-              {userItem.username !== 'admin' && userItem.username !== user.username && (
-              <td className="border p-2">
-                <div className="flex w-full h-full justify-center items-center gap-4 ">
-                  <button onClick={() => console.log('Edit functionality to be implemented')}>
-                    <Pencil size={16} className="text-blue-500" />
-                  </button>
-                  <button onClick={() => removeUser(userItem.username)}//console.log('Remove functionality to be implemented')
-                  className="hover:text-red-700"
-                  >
-                    <Trash size={16} className="text-red-500" />
-                  </button>
-                </div>
-              </td>
-              )}
-            </tr>
+            </React.Fragment>
           ))}
         </tbody>
       </table>
+
+      {dialogOpen && (
+        <UserFormDialog
+          editingUser={editingUser}
+          onClose={handleCloseDialog}
+        />
+      )}
     </div>
   );
 };
