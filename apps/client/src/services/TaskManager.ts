@@ -1,6 +1,6 @@
 // TaskManager.ts
 import { TaskEntry } from '../types';
-import { getTasks } from './firestoreService';
+import { getTasks, getTasksByFamily } from './firestoreService';
 
 export class TaskManager {
   static async loadTasks(): Promise<TaskEntry[]> {
@@ -11,6 +11,18 @@ export class TaskManager {
       return data;
     } catch (error) {
       console.error('Error loading tasks:', error);
+      throw error;
+    }
+  }
+
+  static async loadTasksByFamily(familyId: string): Promise<TaskEntry[]> {
+    try {
+      const data = await getTasksByFamily(familyId);
+      console.log('Tasks manager load by family ', { data });
+
+      return data;
+    } catch (error) {
+      console.error('Error loading tasks by family:', error);
       throw error;
     }
   }

@@ -2,10 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { TaskManager, calculateRemainingDays } from '../services/TaskManager';
 import { addTask, updateTask as updateTaskDoc, deleteTask as deleteTaskDoc } from '../services/firestoreService';
 import {timeAndDateFormatter} from '../services/uiUtils';
-import { TaskEntry } from '../types';
+import { TaskEntry, Kid } from '../types';
 import TaskCalendar from '../components/TaskCalendar';
 import AddScheduledTaskForm from '../Forms/AddScheduledTaskForm';
 import { CalendarCheck, ChevronDown, ChevronUp, Pencil, Trash } from 'lucide-react';
+import { useAuth } from '../Users/AuthContext';
+import { KidManager } from '../services/kidManager';
+
+const ADMIN_FAMILY_ID = 'admin-family';
 
 const initialFormData = {
   taskUser: '',
@@ -21,6 +25,7 @@ const initialFormData = {
   withFood: 'לא משנה',
   comment: '',
 };
+
 type FilterOption = 'הצג משימות בתוקף' | 'הצג משימות סגורות' | 'הצג את כל המשימות';
 const FILTER_OPTIONS: Record<string, FilterOption> = {
   ACTIVE: 'הצג משימות בתוקף',
@@ -29,7 +34,11 @@ const FILTER_OPTIONS: Record<string, FilterOption> = {
 };
 
 const ScheduledPage = () => {
+  const { user, families } = useAuth();
+  const isAdmin = user?.familyId === ADMIN_FAMILY_ID;
+
   const [tasks, setTasks] = useState<TaskEntry[]>([]);
+  const [kids, setKids] = useState<Kid[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -41,7 +50,7 @@ const ScheduledPage = () => {
   const [selectedTask, setSelectedTask] = useState<TaskEntry | null>(null);
   const [filteredTasks, setFilteredTasks] = useState<TaskEntry[]>(tasks);
   const [currentFilter, setCurrentFilter] = useState<FilterOption>(FILTER_OPTIONS.ACTIVE);
-
+  const [selectedFamilyFilter, setSelectedFamilyFilter] = useState<string>('all');
 
   const handleEditTask = (task: TaskEntry) => {
     setTaskToEdit(task);
@@ -70,18 +79,29 @@ const ScheduledPage = () => {
   };
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      const loadedTasks = await TaskManager.loadTasks();
-      console.log ('ScheduledPage use effect loaded tasks', {loadedTasks});
+    const fetchData = async () => {
+      if (!user) return;
+
+      // Load kids
+      const loadedKids = isAdmin
+        ? await KidManager.loadKids()
+        : await KidManager.loadKidsByFamily(user.familyId);
+      setKids(loadedKids);
+
+      // Load tasks scoped to family (admin loads all)
+      const loadedTasks = isAdmin
+        ? await TaskManager.loadTasks()
+        : await TaskManager.loadTasksByFamily(user.familyId);
+      console.log('ScheduledPage use effect loaded tasks', { loadedTasks });
       setTasks(loadedTasks);
     };
-    fetchTasks().catch(error => console.error('Error in useEffect fetchTasks:', error));
-  }, []);
+    fetchData().catch(error => console.error('Error in useEffect fetchData:', error));
+  }, [user]);
 
-  // Apply filter whenever tasks or filter changes
+  // Apply filter whenever tasks, filter, or family filter changes
   useEffect(() => {
-    filterTasks(currentFilter);
-  }, [tasks, currentFilter]);
+    filterTasks(currentFilter, selectedFamilyFilter);
+  }, [tasks, currentFilter, selectedFamilyFilter]);
 
   const handleUpdateTask = async (taskId: string, updatedData: Partial<TaskEntry>) => {
     try {
@@ -119,9 +139,11 @@ const ScheduledPage = () => {
     const endDate = new Date(startDate);
     endDate.setDate(startDate.getDate() + formData.taskDays-1);
      console.log ('handle submit', {startDate, endDate}, formData.taskDays)
+    const familyId = user?.familyId || '';
     if (taskToEdit) {
       const updatedTask: TaskEntry = {
         ...formData,
+        familyId: taskToEdit.familyId || familyId,
         id: taskToEdit.id,
         taskStartDate: timeAndDateFormatter.formatDateForUI(startDate.toString()),
         taskEndDate: timeAndDateFormatter.formatDateForUI(endDate.toString())
@@ -133,6 +155,7 @@ const ScheduledPage = () => {
     } else {
       const newTask: TaskEntry = {
         id: Date.now().toString(),
+        familyId,
         ...formData,
         taskStartDate: timeAndDateFormatter.formatDateForUI(startDate.toString()),
         taskEndDate: timeAndDateFormatter.formatDateForUI(endDate.toString())
@@ -142,7 +165,6 @@ const ScheduledPage = () => {
     }
     setIsFormOpen(false);
     handleClose();
-
   };
  
   const handleClose = () => {
@@ -161,30 +183,35 @@ const ScheduledPage = () => {
     setExpandedRows(newExpandedRows);
   };
 
-    // Filter tasks based on selected option
-    const filterTasks = (filterOption: FilterOption) => {
-      let filtered;
-      
+    // Filter tasks based on selected option and optional family filter (admin only)
+    const filterTasks = (filterOption: FilterOption, familyFilter = selectedFamilyFilter) => {
+      let filtered = [...tasks];
+
+      // Admin family filter
+      if (isAdmin && familyFilter !== 'all') {
+        filtered = filtered.filter(task => task.familyId === familyFilter);
+      }
+
+      // Status filter
       switch (filterOption) {
         case FILTER_OPTIONS.ACTIVE:
-          filtered = tasks.filter(task => 
-            task.taskEndDate && calculateRemainingDays(task.taskEndDate) > 0
+          filtered = filtered.filter(task =>
+            task.taskEndDate && calculateRemainingDays(task.taskEndDate) >= 0
           );
           break;
         case FILTER_OPTIONS.CLOSED:
-          filtered = tasks.filter(task => 
-            !task.taskEndDate || calculateRemainingDays(task.taskEndDate) <= 0
+          filtered = filtered.filter(task =>
+            !task.taskEndDate || calculateRemainingDays(task.taskEndDate) < 0
           );
           break;
         case FILTER_OPTIONS.ALL:
         default:
-          filtered = [...tasks];
           break;
       }
-      
+
       setFilteredTasks(filtered);
     };
-  
+
     // Handle filter change
     const handleFilterChange = (option: FilterOption) => {
       setCurrentFilter(option);
@@ -197,11 +224,11 @@ const ScheduledPage = () => {
   return (
     <div className="flex-1 flex flex-col p-4 bg-white overflow-auto">
 
-      <div className="flex justify-between items-center mb-6 ">
+      <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">משימות מתוזמנות</h1>
         <button
           onClick={() => setIsFormOpen(true)}
-          className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
+          className="px-3 py-2 sm:px-4 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors text-sm sm:text-base"
         >
           הוסף תרופה תקופתית
         </button>
@@ -211,20 +238,40 @@ const ScheduledPage = () => {
         isOpen={isFormOpen}
         isEditMode={isEditMode}
         formData={formData}
+        kids={kids}
         onClose={handleClose}
         onSubmit={handleSubmit}
         onTaskDataChange={handleTaskDataChange}
       />
   
       <div className="overflow-x-auto">
+        {/* Admin family filter */}
+        {isAdmin && (
+          <div className="mb-3">
+            <label className="block text-xs font-medium text-gray-500 mb-1">סינון לפי משפחה</label>
+            <select
+              className="p-2 border rounded text-sm w-full sm:w-auto"
+              value={selectedFamilyFilter}
+              onChange={e => setSelectedFamilyFilter(e.target.value)}
+            >
+              <option value="all">כל המשפחות</option>
+              {families
+                .filter(f => f.id !== ADMIN_FAMILY_ID)
+                .map(f => (
+                  <option key={f.id} value={f.id}>{f.name}</option>
+                ))}
+            </select>
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-2 mb-4 justify-start">
           {Object.values(FILTER_OPTIONS).map((option) => (
             <button
               key={option}
               onClick={() => handleFilterChange(option)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                currentFilter === option 
-                  ? 'bg-emerald-600 text-white' 
+              className={`px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${
+                currentFilter === option
+                  ? 'bg-emerald-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >

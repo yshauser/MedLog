@@ -192,6 +192,21 @@ export const getTasks = async (): Promise<TaskEntry[]> => {
   return getCollection<TaskEntry>('tasks');
 };
 
+export const getTasksByFamily = async (familyId: string): Promise<TaskEntry[]> => {
+  try {
+    const q = query(collection(db, 'tasks'), where('familyId', '==', familyId));
+    const querySnapshot = await getDocs(q);
+    const tasks: TaskEntry[] = [];
+    querySnapshot.forEach((doc) => {
+      tasks.push({ id: doc.id, ...doc.data() } as TaskEntry);
+    });
+    return tasks;
+  } catch (error) {
+    console.error('Error getting tasks by family:', error);
+    throw error;
+  }
+};
+
 export const addTask = async (task: TaskEntry): Promise<string> => {
   return addDocument<TaskEntry>('tasks', task);
 };

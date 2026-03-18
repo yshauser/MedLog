@@ -27,6 +27,7 @@ export interface DailyTakes {
 }
 export interface TaskEntry {
   id: string;
+  familyId: string;
   taskUser: string;
   taskLabel: string;
   taskStartDate: string;

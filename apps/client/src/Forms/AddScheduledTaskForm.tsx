@@ -1,14 +1,14 @@
-import React , {useState, useEffect, SyntheticEvent} from 'react';
-import { TaskEntry, TreatmentType, Frequency } from '../types';
-import {CalendarIcon} from 'lucide-react';
+import React, { useState, useEffect, SyntheticEvent } from 'react';
+import { TaskEntry, TreatmentType, Frequency, Kid } from '../types';
+import { CalendarIcon } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
-
 
 interface AddScheduledTaskFormProps {
   isOpen: boolean;
   isEditMode: boolean;
   formData: Partial<TaskEntry>;
+  kids: Kid[];
   onClose: () => void;
   onSubmit: (formData: Partial<TaskEntry>) => Promise<void>;
   onTaskDataChange: (data: Partial<TaskEntry>) => void;
@@ -18,36 +18,37 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
   isOpen,
   isEditMode,
   formData,
+  kids,
   onClose,
   onSubmit,
   onTaskDataChange,
 }) => {
   if (!isOpen) return null;
 
-    const [treatmentType, setTreatmentType] = useState<TreatmentType>('סבב טיפול');
-    const [frequency, setFrequency] = useState<Frequency>('יומי');
+  const [treatmentType, setTreatmentType] = useState<TreatmentType>('סבב טיפול');
+  const [frequency, setFrequency] = useState<Frequency>('יומי');
 
-    // Handler for treatment type changes
-    const handleTreatmentTypeChange = (value: TreatmentType) => {
-      setTreatmentType(value);
-      if (value === 'תרופה קבועה') {
-        // Set a default high number of days for ongoing treatment
-        onTaskDataChange({ ...formData, taskDays: 365 });
-      } else {
-        // Reset to default for treatment cycle
-        onTaskDataChange({ ...formData, taskDays: 1 });
-      }
-    };
-  
-    // Handler for frequency changes
-    const handleFrequencyChange = (value: Frequency) => {
-      setFrequency(value);
-      // Update taskDays based on frequency
-      const days = value === 'יומי' ? 365 : 52;
-      onTaskDataChange({ ...formData, taskDays: days });
-    };
+  // Handler for treatment type changes
+  const handleTreatmentTypeChange = (value: TreatmentType) => {
+    setTreatmentType(value);
+    if (value === 'תרופה קבועה') {
+      // Set a default high number of days for ongoing treatment
+      onTaskDataChange({ ...formData, taskDays: 365 });
+    } else {
+      // Reset to default for treatment cycle
+      onTaskDataChange({ ...formData, taskDays: 1 });
+    }
+  };
 
-      // Initialize treatment type and frequency based on formData
+  // Handler for frequency changes
+  const handleFrequencyChange = (value: Frequency) => {
+    setFrequency(value);
+    // Update taskDays based on frequency
+    const days = value === 'יומי' ? 365 : 52;
+    onTaskDataChange({ ...formData, taskDays: days });
+  };
+
+  // Initialize treatment type and frequency based on formData
   useEffect(() => {
     if (formData.taskDays) {
       // If taskDays is 365 or 52, it's likely a regular medication
@@ -64,91 +65,95 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
   }, [formData.taskDays, setTreatmentType, setFrequency]);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center overflow-y-auto">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center overflow-y-auto p-0 sm:p-4">
+      <div className="bg-white w-full h-full sm:h-auto sm:rounded-lg sm:max-w-md sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6 shadow-lg">
         <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">{isEditMode ? 'עריכת תרופה תקופתית' : 'הוספת תרופה תקופתית חדשה'}</h2>          
-            <button
+          <h2 className="text-xl font-semibold">{isEditMode ? 'עריכת תרופה תקופתית' : 'הוספת תרופה תקופתית חדשה'}</h2>
+          <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
-            >
+          >
             ✕
-            </button>
+          </button>
         </div>
 
         <div className="space-y-4">
-            <div>
+          <div>
             <label htmlFor="taskUser" className="block text-sm font-medium text-gray-700 mb-1">
-                משתמש
+              משתמש
             </label>
-            <input
-                id="taskUser"
-                className="w-full p-2 border rounded"
-                placeholder="שם"
-                value={formData.taskUser}
-                onChange={e => onTaskDataChange({ ...formData, taskUser: e.target.value })}
-                required
-            />
-            </div>
-            <div>
+            <select
+              id="taskUser"
+              className="w-full p-3 sm:p-2 border rounded"
+              value={formData.taskUser || ''}
+              onChange={e => onTaskDataChange({ ...formData, taskUser: e.target.value })}
+              required
+            >
+              <option value="">בחר ילד/ה</option>
+              {kids.map(kid => (
+                <option key={kid.id} value={kid.name}>{kid.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label htmlFor="taskLabel" className="block text-sm font-medium text-gray-700 mb-1">
-                תיאור
+              תיאור
             </label>
             <input
-                id= "taskLabel"
-                className="w-full p-2 border rounded"
-                placeholder="אנטיביוטיקה, לחץ דם, הרגעה, וכד'"
-                value={formData.taskLabel}
-                onChange={e => onTaskDataChange({ ...formData, taskLabel: e.target.value })}
+              id="taskLabel"
+              className="w-full p-3 sm:p-2 border rounded"
+              placeholder="אנטיביוטיקה, לחץ דם, הרגעה, וכד'"
+              value={formData.taskLabel}
+              onChange={e => onTaskDataChange({ ...formData, taskLabel: e.target.value })}
             />
-            </div>
-            <div>
+          </div>
+          <div>
             <label htmlFor="medicine" className="block text-sm font-medium text-gray-700 mb-1">
               שם התרופה
             </label>
             <input
-                id="medicine"
-                className="w-full p-2 border rounded"
-                placeholder=""
-                value={formData.medicine}
-                onChange={e => onTaskDataChange({ ...formData, medicine: e.target.value })}
-                required
+              id="medicine"
+              className="w-full p-3 sm:p-2 border rounded"
+              placeholder=""
+              value={formData.medicine}
+              onChange={e => onTaskDataChange({ ...formData, medicine: e.target.value })}
+              required
             />
-            </div>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label htmlFor="dose" className="block text-sm font-medium text-gray-700 mb-1">
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <label htmlFor="dose" className="block text-sm font-medium text-gray-700 mb-1">
                 מינון
-                </label>
-            <input
+              </label>
+              <input
                 id="dose"
-                className="w-full p-2 border rounded"
+                className="w-full p-3 sm:p-2 border rounded"
                 placeholder="מינון"
                 value={formData.dose}
-                onChange={e => onTaskDataChange({ ...formData, dose:Number(e.target.value)||0 })}
-            />
+                onChange={e => onTaskDataChange({ ...formData, dose: Number(e.target.value) || 0 })}
+              />
             </div>
             <div className="flex-1">
-            <label htmlFor="doseUnits" className="block text-sm font-medium text-gray-700 mb-1">
-              יחידות
-            </label>
-            <input
+              <label htmlFor="doseUnits" className="block text-sm font-medium text-gray-700 mb-1">
+                יחידות
+              </label>
+              <input
                 id="doseUnits"
-                className="w-full p-2 border rounded"
+                className="w-full p-3 sm:p-2 border rounded"
                 placeholder='מ"ל, כדור, וכד'
                 value={formData.doseUnits}
                 onChange={e => onTaskDataChange({ ...formData, doseUnits: e.target.value })}
                 required
-            />
+              />
             </div>
-            </div>
+          </div>
 
-            <div className="flex-1">
+          <div className="flex-1">
             <label htmlFor="taskStartDate" className="block text-sm font-medium text-gray-700 mb-1">
-            תאריך התחלה 
+              תאריך התחלה
             </label>
             <div className="relative">
-                <DatePicker
+              <DatePicker
                 id="taskStartDate"
                 selected={formData.taskStartDate ? new Date(formData.taskStartDate.split('/').reverse().join('-')) : null}
                 onChange={(date: Date | null, _event?: SyntheticEvent<any, Event>) => {
@@ -161,52 +166,48 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
                   }
                 }}
                 dateFormat="dd/MM/yyyy"
-                className="w-full p-2 border rounded pl-10"
+                className="w-full p-3 sm:p-2 border rounded pl-10"
                 placeholderText="DD/MM/YYYY"
                 showYearDropdown
                 scrollableYearDropdown
                 yearDropdownItemNumber={10}
-                // locale="he"
-                />
-                <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              />
+              <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             </div>
-            </div>
-         
-            <div className="flex gap-4">
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-            <label htmlFor="treatmentType" className="block text-sm font-medium text-gray-700 mb-1"
-              style={{ height: '40px' }}
+              <label htmlFor="treatmentType" className="block text-sm font-medium text-gray-700 mb-1"
+                style={{ height: '40px' }}
               >
-              משך תקופה
-            </label>
-            <select
-              id="treatmentType"
-              className="w-full p-2 border rounded"
-              value={treatmentType}
-              onChange={(e)=> handleTreatmentTypeChange(e.target.value as TreatmentType)}
+                משך תקופה
+              </label>
+              <select
+                id="treatmentType"
+                className="w-full p-3 sm:p-2 border rounded"
+                value={treatmentType}
+                onChange={(e) => handleTreatmentTypeChange(e.target.value as TreatmentType)}
               >
-              <option value="סבב טיפול">סבב טיפול</option>
-              <option value="תרופה קבועה">תרופה קבועה</option>
-            </select>
+                <option value="סבב טיפול">סבב טיפול</option>
+                <option value="תרופה קבועה">תרופה קבועה</option>
+              </select>
             </div>
             {/* Conditional Rendering based on Treatment Type */}
             <div className="flex-1">
               {treatmentType === 'סבב טיפול' ? (
                 <>
                   <label htmlFor="taskDays" className="block text-sm font-medium text-gray-700 mb-1"
-                        style={{ height: '40px' }}
+                    style={{ height: '40px' }}
                   >
                     מספר ימים לנטילה
                   </label>
                   <input
                     id="taskDays"
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 sm:p-2 border rounded"
                     placeholder="1 / 2 / ..."
                     value={formData.taskDays}
-                    onChange={e => onTaskDataChange({ 
-                      ...formData, 
-                      taskDays: e.target.value ? Number(e.target.value) : 1 
-                    })}
+                    onChange={e => onTaskDataChange({ ...formData, taskDays: e.target.value ? Number(e.target.value) : 1 })}
                     type="number"
                     min="1"
                     required
@@ -215,13 +216,13 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
               ) : (
                 <>
                   <label htmlFor="frequency" className="block text-sm font-medium text-gray-700 mb-1"
-                        style={{ height: '40px' }}
+                    style={{ height: '40px' }}
                   >
                     תדירות
                   </label>
                   <select
                     id="frequency"
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 sm:p-2 border rounded"
                     value={frequency}
                     onChange={(e) => handleFrequencyChange(e.target.value as Frequency)}
                   >
@@ -231,79 +232,75 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
                 </>
               )}
             </div>
-              <div className="flex-1">
-                <label htmlFor="timesPerDay" className="block text-sm font-medium text-gray-700 mb-1"
-                  style={{ height: '40px' }}
-                  >
-                  מספר פעמים ביום
-                </label>
-                <input
-                    id="timesPerDay"
-                    className="w-full p-2 border rounded"
-                    placeholder="מספר פעמים ביום"
-                    type="number"
-                    min="1"
-                    value={formData.timesPerDay}
-                    onChange={e => onTaskDataChange({ ...formData, timesPerDay: Number(e.target.value)||0 })}
-                    // required
-                />
-              </div>
+            <div className="flex-1">
+              <label htmlFor="timesPerDay" className="block text-sm font-medium text-gray-700 mb-1"
+                style={{ height: '40px' }}
+              >
+                מספר פעמים ביום
+              </label>
+              <input
+                id="timesPerDay"
+                className="w-full p-3 sm:p-2 border rounded"
+                placeholder="מספר פעמים ביום"
+                type="number"
+                min="1"
+                value={formData.timesPerDay}
+                onChange={e => onTaskDataChange({ ...formData, timesPerDay: Number(e.target.value) || 0 })}
+              />
             </div>
+          </div>
 
-            <div>
+          <div>
             <label htmlFor="timeInDay" className="block text-sm font-medium text-gray-700 mb-1">
               זמן ביום
             </label>
             <input
-                id="timeInDay"
-                className="w-full p-2 border rounded"
-                placeholder="בוקר/צהריים/ערב/20:00/..."
-                value={formData.timeInDay}
-                onChange={e => onTaskDataChange({ ...formData, timeInDay: e.target.value })}
-                // required
+              id="timeInDay"
+              className="w-full p-3 sm:p-2 border rounded"
+              placeholder="בוקר/צהריים/ערב/20:00/..."
+              value={formData.timeInDay}
+              onChange={e => onTaskDataChange({ ...formData, timeInDay: e.target.value })}
             />
-            </div>
-            <div>
+          </div>
+          <div>
             <label htmlFor="withFood" className="block text-sm font-medium text-gray-700 mb-1">
               עם אוכל
             </label>
             <select
               id="withFood"
-              className="w-full p-2 border rounded"
+              className="w-full p-3 sm:p-2 border rounded"
               value={formData.withFood || 'לא משנה'}
               onChange={e => onTaskDataChange({ ...formData, withFood: e.target.value })}
-              >
+            >
               <option value="לא משנה">לא משנה</option>
               <option value="לפני האוכל">לפני האוכל</option>
               <option value="עם או אחרי האוכל">עם או אחרי האוכל</option>
             </select>
-            </div>
+          </div>
 
-            <div>
+          <div>
             <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-1">
-                הערות
+              הערות
             </label>
             <input
-                id="comment"
-                className="w-full p-2 border rounded"
-                placeholder="הערות"
-                value={formData.comment}
-                onChange={e => onTaskDataChange({ ...formData, comment: e.target.value })}
-                // required
+              id="comment"
+              className="w-full p-3 sm:p-2 border rounded"
+              placeholder="הערות"
+              value={formData.comment}
+              onChange={e => onTaskDataChange({ ...formData, comment: e.target.value })}
             />
-            </div>
+          </div>
 
-
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end gap-2 mt-4">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              className="flex-1 sm:flex-none px-4 py-3 sm:py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm font-medium"
             >
               ביטול
             </button>
             <button
               onClick={() => onSubmit(formData)}
-              className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700"
+              className="flex-1 sm:flex-none px-4 py-3 sm:py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm font-medium"
             >
               שמור
             </button>

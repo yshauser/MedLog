@@ -211,7 +211,7 @@ const TaskCalendar: React.FC<CalendarProps> = ({ task, onClose, onUpdateTask }) 
           <h2 className="text-xl">בחר תאריך</h2>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"          >
+            className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"          >
             סגור
           </button>
         </div>
