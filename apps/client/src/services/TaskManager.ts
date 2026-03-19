@@ -37,5 +37,6 @@ export const calculateRemainingDays = (endDate: string): number => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const remainingDays = Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  return Math.max(0, remainingDays);
+  // return Math.max(0, remainingDays);
+  return remainingDays;
   };

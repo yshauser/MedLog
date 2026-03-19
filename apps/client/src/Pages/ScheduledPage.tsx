@@ -374,7 +374,9 @@ const ScheduledPage = () => {
                           <p>מ: {timeAndDateFormatter.formatDateForUI(task.taskStartDate)}</p>
                           <p>עד: {task.taskEndDate && timeAndDateFormatter.formatDateForUI(task.taskEndDate)}</p>
                           <p>סך הכל <strong>{task.taskDays}</strong> ימים</p>
-                          <p>נשארו <strong>{task.taskEndDate && calculateRemainingDays(task.taskEndDate)+1}</strong> ימים</p>
+                          {task.taskEndDate && (calculateRemainingDays(task.taskEndDate)>=0) && (
+                            <p>נשארו <strong>{task.taskEndDate && calculateRemainingDays(task.taskEndDate)+1}</strong> ימים</p>
+                          )}
                         </div>
                         <div>
                           <p className="font-semibold mb-2">זמני נטילה:</p>
