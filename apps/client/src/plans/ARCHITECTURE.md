@@ -247,5 +247,5 @@ src/
 - [x] **Remove hardcoded API keys** — `dataMigration.ts` now imports shared `db` from `firebase.js`
 - [x] **Clean up `vite.config.ts`** — removed unused `/api` proxy config
 - [x] **Improve UserManagement** — modal form for create/edit (`UserFormDialog`), inline delete confirmation, email column, exported `User`/`Family` types from `AuthContext`, added `updateUser()`, removed dead code
-- [ ] **Add tests** — unit tests for services, component tests for key pages
+- [x] **Add tests** — unit tests for services, component tests for key pages
 - [ ] **Other**: _____

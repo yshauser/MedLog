@@ -1,0 +1,8 @@
+import '@testing-library/jest-dom';
+import { vi } from 'vitest';
+
+vi.mock('firebase/messaging', () => ({
+  getMessaging: vi.fn(() => ({})),
+  getToken: vi.fn(() => Promise.resolve('')),
+  onMessage: vi.fn(),
+}));

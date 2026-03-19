@@ -11,7 +11,7 @@
       "noEmit": true,
       "forceConsistentCasingInFileNames": true,
       "resolveJsonModule": true,
-      "types": ["vite/client"]
+      "types": ["vite/client", "vitest/globals"]
     },
     "include": ["src", "src/custom.d.ts"]
   }
