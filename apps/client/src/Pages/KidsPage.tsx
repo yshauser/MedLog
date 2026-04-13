@@ -73,6 +73,7 @@ export const KidsPage = () => {
       lastUpdated: formattedDate,
       familyName: familyName,
       familyId: familyId, // Set family to current user's family if not specified
+      favoriteMedicine: kidData.favoriteMedicine?.trim(),
     };
 
     try {
