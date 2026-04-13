@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Kid } from '../types.ts';
 import { calculateAge, KidManager, updateDateYearTo4digits } from '../services/kidManager.ts';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { Pencil, Trash } from 'lucide-react';
+import { Pencil, Trash, ArrowUpDown } from 'lucide-react';
 import { useAuth } from '../Users/AuthContext.tsx';
 import { useTranslation } from 'react-i18next';
 import AddKidForm from '../Forms/AddKidForm.tsx';
@@ -106,6 +106,19 @@ export const KidsPage = () => {
     }
   };
 
+  const resetKidOrder = async () => {
+    if (!user) return;
+    try {
+      await updateUserKidOrder(user.username, []);
+      setUser({ ...user, kidOrder: [] });
+      const sorted = [...kids].sort((a, b) => (a.age ?? Infinity) - (b.age ?? Infinity));
+      setKids(sorted);
+      filterKidsForCurrentUser(sorted);
+    } catch (error) {
+      console.error('Error resetting kid order:', error);
+    }
+  };
+
   const handleCloseModal = () => {
     setNewKid({});
     setIsModalOpen(false);
@@ -197,7 +210,8 @@ export const KidsPage = () => {
           age: calculateAge(kid.birthDate || ''),
         }));
 
-        // Sort kids based on user's kidOrder
+        // Sort kids based on user's kidOrder, falling back to age ascending (youngest first)
+        const byAgeAscending = (a: Kid, b: Kid) => (a.age ?? Infinity) - (b.age ?? Infinity);
         let sortedKids = [...kidsWithAge];
         if (user && user.kidOrder) {
           sortedKids.sort((a, b) => {
@@ -207,10 +221,13 @@ export const KidsPage = () => {
                 indexA = user.kidOrder.indexOf(a.id);
                 indexB = user.kidOrder.indexOf(b.id);
             }
+            if (indexA === -1 && indexB === -1) return byAgeAscending(a, b);
             if (indexA === -1) return 1; // a comes later
             if (indexB === -1) return -1; // b comes later
             return indexA - indexB;
           });
+        } else {
+          sortedKids.sort(byAgeAscending);
         }
 
         setKids(sortedKids);
@@ -246,12 +263,24 @@ export const KidsPage = () => {
         </div>
       )}
       {(user?.role === 'admin' || user?.role === 'owner') ? (
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 mb-4"
-      >
-        {t('kids.addKid')}
-      </button>
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+        >
+          {t('kids.addKid')}
+        </button>
+        {user?.kidOrder && user.kidOrder.length > 0 && (
+          <button
+            onClick={resetKidOrder}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-1"
+            title={t('kids.resetOrder')}
+          >
+            <ArrowUpDown size={16} />
+            {t('kids.resetOrder')}
+          </button>
+        )}
+      </div>
       ) : null }
       <AddKidForm
         isOpen={isModalOpen}

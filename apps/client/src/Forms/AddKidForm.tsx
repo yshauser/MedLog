@@ -1,8 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, SyntheticEvent } from 'react';
 import { Kid } from '../types.ts';
 import { useAuth } from '../Users/AuthContext.tsx';
 import { useTranslation } from 'react-i18next';
 import { addKid, updateKid } from '../services/firestoreService';
+import { CalendarIcon } from 'lucide-react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 interface AddKidFormProps {
   isOpen: boolean;
@@ -56,12 +59,29 @@ export const AddKidForm: React.FC<AddKidFormProps> = ({
             value={kidData.name || ''}
             onChange={e => onKidDataChange({ ...kidData, name: e.target.value })}
           />
-          <input
-            className="w-full p-2 border rounded"
-            placeholder={t('addKidForm.birthDatePlaceholder')}
-            value={kidData.birthDate || ''}
-            onChange={e => onKidDataChange({ ...kidData, birthDate: e.target.value })}
-          />
+          <div className="relative">
+            <DatePicker
+              selected={kidData.birthDate ? (() => { const [d, m, y] = kidData.birthDate!.split('/'); return new Date(Number(y), Number(m) - 1, Number(d)); })() : null}
+              onChange={(date: Date | null, _event?: SyntheticEvent<any, Event>) => {
+                if (date) {
+                  const day = date.getDate().toString().padStart(2, '0');
+                  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                  const year = date.getFullYear();
+                  onKidDataChange({ ...kidData, birthDate: `${day}/${month}/${year}` });
+                } else {
+                  onKidDataChange({ ...kidData, birthDate: '' });
+                }
+              }}
+              dateFormat="dd/MM/yyyy"
+              className="w-full p-2 border rounded pl-10"
+              placeholderText={t('addKidForm.birthDatePlaceholder')}
+              showYearDropdown
+              scrollableYearDropdown
+              yearDropdownItemNumber={30}
+              maxDate={new Date()}
+            />
+            <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          </div>
           <input
             className="w-full p-2 border rounded"
             type="number"

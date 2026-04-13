@@ -67,7 +67,8 @@
     "lastUpdated": "עודכן לאחרונה",
     "family": "משפחה",
     "noKids": "אין ילדים להצגה",
-    "confirmDelete": "האם אתה בטוח שברצונך למחוק את הילד?"
+    "confirmDelete": "האם אתה בטוח שברצונך למחוק את הילד?",
+    "resetOrder": "איפוס סדר"
   },
   "addKidForm": {
     "titleAdd": "הוסף ילד חדש",
