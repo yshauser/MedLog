@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { getDocs, collection, doc, setDoc, deleteDoc, query, where } from 'firebase/firestore';
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from '../firebase';
+import { Kid } from '../types';
+import { KidManager } from '../services/kidManager';
 
 interface UserData {
   username: string;
@@ -23,6 +25,9 @@ interface AuthContextType {
   user: User | null;
   users: User[];
   families: Family[];
+  kids: Kid[];
+  kidsLoading: boolean;
+  setKids: React.Dispatch<React.SetStateAction<Kid[]>>;
   login: (username: string) => { success: boolean, message?: string };
   loginWithGoogle: () => Promise<{ success: boolean, message?: string }>;
   logout: () => Promise<void>;
@@ -36,11 +41,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const AUTH_ADMIN_FAMILY_ID = 'admin-family';
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [initialized, setInitialized] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [families, setFamilies] = useState<Family[]>([]);
+  const [kids, setKids] = useState<Kid[]>([]);
+  const [kidsLoading, setKidsLoading] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -225,6 +234,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  useEffect(() => {
+    if (!user) {
+      setKids([]);
+      return;
+    }
+    const fetchKids = async () => {
+      setKidsLoading(true);
+      try {
+        const isAdminFamilyMember = user.familyId === AUTH_ADMIN_FAMILY_ID;
+        let loadedKids: Kid[];
+        if (isAdminFamilyMember) {
+          loadedKids = await KidManager.loadKids();
+        } else {
+          const userFamily = families.find(f => f.id === user.familyId);
+          loadedKids = userFamily
+            ? await KidManager.loadKidsByFamily(userFamily.id)
+            : [];
+        }
+        const byAgeAscending = (a: Kid, b: Kid) => (a.age ?? Infinity) - (b.age ?? Infinity);
+        if (user.kidOrder?.length) {
+          loadedKids.sort((a, b) => {
+            const indexA = user.kidOrder!.indexOf(a.id);
+            const indexB = user.kidOrder!.indexOf(b.id);
+            if (indexA === -1 && indexB === -1) return byAgeAscending(a, b);
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+            return indexA - indexB;
+          });
+        } else {
+          loadedKids.sort(byAgeAscending);
+        }
+        setKids(loadedKids);
+      } catch (error) {
+        console.error('Error fetching kids in AuthContext:', error);
+      } finally {
+        setKidsLoading(false);
+      }
+    };
+    fetchKids();
+  }, [user]);
+
   const logout = async () => {
     if (user?.authProvider === 'google') {
       try { await signOut(auth); } catch (e) { console.error('signOut error', e); }
@@ -350,7 +400,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // console.log ('auth ', {user, users, families})
   return (
     <AuthContext.Provider value={{
-      user, users, families,
+      user, users, families, kids, kidsLoading, setKids,
       login, loginWithGoogle, logout, addUser, updateUser, getUserFamily, getCurrentUserFamily, removeUser,
       setUser
     }}>

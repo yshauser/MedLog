@@ -1,7 +1,6 @@
 // src/pages/Home/HomePage.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MedicineDialog } from '../components/MedicineDialog';
-import { KidManager } from '../services/kidManager';
 import { LogEntry, Kid } from '../types';
 import { useAuth } from '../Users/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -15,53 +14,17 @@ interface HomePageProps {
 
 export const HomePage: React.FC<HomePageProps> = ({ logData, setLogData }) => {
   const { t } = useTranslation();
-  const { user, getCurrentUserFamily, families } = useAuth();
+  const { user, families, kids, kidsLoading } = useAuth();
   const [selectedKid, setSelectedKid] = useState<Kid | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
-  const [kids, setKids] = useState<Kid[]>([]);
   const [selectedFamilyFilter, setSelectedFamilyFilter] = useState<string>('all');
-  const [filteredKids, setFilteredKids] = useState<Kid[]>([]);
 
   const isAdminFamilyMember = user?.familyId === ADMIN_FAMILY_ID;
 
-  useEffect(() => {
-    const loadKids = async () => {
-      const isAdminFamilyMember = user?.familyId === ADMIN_FAMILY_ID;
-      let loadedKids: Kid[];
-
-      if (isAdminFamilyMember) {
-        loadedKids = await KidManager.loadKids();
-      } else {
-        const userFamily = getCurrentUserFamily();
-        loadedKids = userFamily
-          ? await KidManager.loadKidsByFamily(userFamily.id)
-          : [];
-      }
-
-      // Sort by user's kidOrder if available
-      if (user?.kidOrder?.length) {
-        loadedKids.sort((a, b) => {
-          const indexA = user.kidOrder!.indexOf(a.id);
-          const indexB = user.kidOrder!.indexOf(b.id);
-          if (indexA === -1) return 1;
-          if (indexB === -1) return -1;
-          return indexA - indexB;
-        });
-      }
-
-      setKids(loadedKids);
-    };
-    loadKids();
-  }, [user]);
-
-  useEffect(() => {
-    if (user?.familyId === ADMIN_FAMILY_ID && selectedFamilyFilter !== 'all') {
-      setFilteredKids(kids.filter(k => k.familyId === selectedFamilyFilter));
-    } else {
-      setFilteredKids(kids);
-    }
-  }, [kids, selectedFamilyFilter]);
+  const filteredKids = isAdminFamilyMember && selectedFamilyFilter !== 'all'
+    ? kids.filter(k => k.familyId === selectedFamilyFilter)
+    : kids;
 
   const handleKidClick = (kid: Kid) => {
     console.log ('home page, handle kid click', {kid});
@@ -89,15 +52,20 @@ export const HomePage: React.FC<HomePageProps> = ({ logData, setLogData }) => {
         </div>
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full max-w-4xl mb-8">
-        {filteredKids.map((kid,index) => (
-          <button
-            key={kid.id || index}
-            onClick={() => handleKidClick(kid)}
-            className="bg-emerald-600 text-white p-4 rounded-lg shadow-md hover:bg-emerald-700 transition-colors text-center flex-1"
-          >
-            {kid.name}
-          </button>
-        ))}
+        {kidsLoading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-gray-200 animate-pulse p-4 rounded-lg shadow-md h-14" />
+            ))
+          : filteredKids.map((kid, index) => (
+              <button
+                key={kid.id || index}
+                onClick={() => handleKidClick(kid)}
+                className="bg-emerald-600 text-white p-4 rounded-lg shadow-md hover:bg-emerald-700 transition-colors text-center flex-1"
+              >
+                {kid.name}
+              </button>
+            ))
+        }
       </div>
       
       <button 
