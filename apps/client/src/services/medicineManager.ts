@@ -128,8 +128,9 @@ export class MedicineManager {
   }
 
   static findMedicineByName(name: string): Medicine | undefined {
+    const trimmedName = name.trim();
     for (const group of this.medicineGroups) {
-      if (group.name === name && group.data.length > 0) {
+      if (group.name === trimmedName && group.data.length > 0) {
         return group.data[0];
       }
     }
@@ -157,7 +158,7 @@ export class MedicineManager {
   }
 
   static calculateDosage(medicineName: string, kidWeight: number | undefined, kidAge: number | undefined): string {
-    const medicineGroup = this.medicineGroups.find(group => group.name === medicineName);
+    const medicineGroup = this.medicineGroups.find(group => group.name === medicineName.trim());
 
     if (medicineGroup) {
       const medicine = medicineGroup.data[0];

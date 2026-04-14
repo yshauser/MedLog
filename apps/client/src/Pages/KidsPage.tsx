@@ -2,19 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Kid } from '../types.ts';
 import { calculateAge, KidManager, updateDateYearTo4digits } from '../services/kidManager.ts';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { Pencil, Trash } from 'lucide-react';
+import { Pencil, Trash, ArrowUpDown } from 'lucide-react';
 import { useAuth } from '../Users/AuthContext.tsx';
 import { useTranslation } from 'react-i18next';
 import AddKidForm from '../Forms/AddKidForm.tsx';
-import { timeAndDateFormatter } from '../services/uiUtils.ts';
-import { addKid as addKidDoc, updateKid as updateKidDoc, deleteKid as deleteKidDoc, getKids, getFamilyNameByFamilyId, updateKidsOrder, updateUserKidOrder } from '../services/firestoreService';
+import { addKid as addKidDoc, updateKid as updateKidDoc, deleteKid as deleteKidDoc, getFamilyNameByFamilyId, updateUserKidOrder } from '../services/firestoreService';
 
 const ADMIN_FAMILY_ID = 'admin-family';
 
 export const KidsPage = () => {
   const { t } = useTranslation();
-  const { user, getCurrentUserFamily, setUser, families } = useAuth();
-  const [kids, setKids] = useState<Kid[]>([]);
+  const { user, getCurrentUserFamily, setUser, families, kids, setKids, kidsLoading } = useAuth();
   const [filteredKids, setFilteredKids] = useState<Kid[]>([]);
   const [selectedFamilyFilter, setSelectedFamilyFilter] = useState<string>('all');
   const [newKid, setNewKid] = useState<Partial<Kid>>({});
@@ -73,6 +71,7 @@ export const KidsPage = () => {
       lastUpdated: formattedDate,
       familyName: familyName,
       familyId: familyId, // Set family to current user's family if not specified
+      favoriteMedicine: kidData.favoriteMedicine?.trim(),
     };
 
     try {
@@ -92,7 +91,7 @@ export const KidsPage = () => {
 
     if (isEditMode) {
       const updatedKids = kids.map(kid => (kid.id === editKidId ? updatedKidData as Kid : kid));
-      setKids (updatedKids);
+      setKids(updatedKids);
       filterKidsForCurrentUser(updatedKids);
     } else {
       const updatedKids = [...kids, updatedKidData as Kid];
@@ -102,6 +101,19 @@ export const KidsPage = () => {
     handleCloseModal();
     } catch (error) {
       console.error('Error saving kid:', error);
+    }
+  };
+
+  const resetKidOrder = async () => {
+    if (!user) return;
+    try {
+      await updateUserKidOrder(user.username, []);
+      setUser({ ...user, kidOrder: [] });
+      const sorted = [...kids].sort((a, b) => (a.age ?? Infinity) - (b.age ?? Infinity));
+      setKids(sorted);
+      filterKidsForCurrentUser(sorted);
+    } catch (error) {
+      console.error('Error resetting kid order:', error);
     }
   };
 
@@ -123,11 +135,10 @@ export const KidsPage = () => {
   const deleteKid = async (id: string) => {
     try {
       console.log ('in delete before set', {id, kids})
-      // const updatedKidData = kids.filter(kid => kid.id !== id);
       await deleteKidDoc(id);
       const updatedKidData = kids.filter(kid => kid.id !== id);
       setKids(updatedKidData);
-      filterKidsForCurrentUser (updatedKidData);
+      filterKidsForCurrentUser(updatedKidData);
     } catch (error) {
       console.error('Error deleting kid:', error);
     }
@@ -186,40 +197,8 @@ export const KidsPage = () => {
   };
 
   useEffect(() => {
-    const fetchKids = async () => {
-      try {
-        const loadedKids = await getKids();
-        // console.log('Page-kids use effect loaded kids', { loadedKids });
-        // Calculate age for each kid after loading
-        const kidsWithAge = loadedKids.map(kid => ({
-          ...kid,
-          age: calculateAge(kid.birthDate || ''),
-        }));
-
-        // Sort kids based on user's kidOrder
-        let sortedKids = [...kidsWithAge];
-        if (user && user.kidOrder) {
-          sortedKids.sort((a, b) => {
-            let indexA = -1;
-            let indexB = -1;
-            if (user.kidOrder){
-                indexA = user.kidOrder.indexOf(a.id);
-                indexB = user.kidOrder.indexOf(b.id);
-            }
-            if (indexA === -1) return 1; // a comes later
-            if (indexB === -1) return -1; // b comes later
-            return indexA - indexB;
-          });
-        }
-
-        setKids(sortedKids);
-        filterKidsForCurrentUser(sortedKids, selectedFamilyFilter);
-      } catch (error) {
-        console.error('Error in useEffect fetchKids:', error);
-      }
-    };
-    fetchKids().catch(error => console.error('Error in useEffect fetchKids:', error));
-  }, [user]);
+    filterKidsForCurrentUser(kids, selectedFamilyFilter);
+  }, [kids]);
 
   return (
     <main className="flex-1 flex flex-col items-center justify-center p-4 bg-white">
@@ -245,12 +224,24 @@ export const KidsPage = () => {
         </div>
       )}
       {(user?.role === 'admin' || user?.role === 'owner') ? (
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 mb-4"
-      >
-        {t('kids.addKid')}
-      </button>
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+        >
+          {t('kids.addKid')}
+        </button>
+        {user?.kidOrder && user.kidOrder.length > 0 && (
+          <button
+            onClick={resetKidOrder}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-1"
+            title={t('kids.resetOrder')}
+          >
+            <ArrowUpDown size={16} />
+            {t('kids.resetOrder')}
+          </button>
+        )}
+      </div>
       ) : null }
       <AddKidForm
         isOpen={isModalOpen}
@@ -262,6 +253,18 @@ export const KidsPage = () => {
         onKidDataChange={setNewKid}
       />
       <div className="w-full max-w-2xl">
+      {kidsLoading ? (
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="p-4 border rounded-lg shadow-sm animate-pulse">
+              <div className="flex justify-between items-center p-2">
+                <div className="h-5 bg-gray-200 rounded w-1/3" />
+                <div className="h-4 bg-gray-200 rounded w-16 mx-4" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="kidsList">
           {(provided) => (
@@ -345,6 +348,7 @@ export const KidsPage = () => {
             )}
         </Droppable>
       </DragDropContext>
+      )}
       </div>
       {isDeleteModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">

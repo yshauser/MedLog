@@ -67,7 +67,8 @@
     "lastUpdated": "Last updated",
     "family": "Family",
     "noKids": "No kids to display",
-    "confirmDelete": "Are you sure you want to delete this kid?"
+    "confirmDelete": "Are you sure you want to delete this kid?",
+    "resetOrder": "Reset order"
   },
   "addKidForm": {
     "titleAdd": "Add New Kid",
