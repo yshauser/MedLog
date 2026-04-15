@@ -5,6 +5,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Pencil, Trash, ArrowUpDown } from 'lucide-react';
 import { useAuth } from '../Users/AuthContext.tsx';
 import { useTranslation } from 'react-i18next';
+import { useSync } from '../context/SyncContext';
 import AddKidForm from '../Forms/AddKidForm.tsx';
 import { addKid as addKidDoc, updateKid as updateKidDoc, deleteKid as deleteKidDoc, getFamilyNameByFamilyId, updateUserKidOrder } from '../services/firestoreService';
 
@@ -12,6 +13,7 @@ const ADMIN_FAMILY_ID = 'admin-family';
 
 export const KidsPage = () => {
   const { t } = useTranslation();
+  const { addPendingKid } = useSync();
   const { user, getCurrentUserFamily, setUser, families, kids, setKids, kidsLoading } = useAuth();
   const [filteredKids, setFilteredKids] = useState<Kid[]>([]);
   const [selectedFamilyFilter, setSelectedFamilyFilter] = useState<string>('all');
@@ -76,10 +78,14 @@ export const KidsPage = () => {
 
     try {
       // console.log('kidDataWithoutAge', kidDataWithoutAge);
-      if (isEditMode && editKidId) {
-        await updateKidDoc(editKidId, kidDataWithoutAge);
+      if (navigator.onLine) {
+        if (isEditMode && editKidId) {
+          await updateKidDoc(editKidId, kidDataWithoutAge);
+        } else {
+          await addKidDoc(kidDataWithoutAge as Kid);
+        }
       } else {
-        await addKidDoc(kidDataWithoutAge as Kid);
+        addPendingKid(isEditMode ? 'update' : 'add', kidDataWithoutAge as Kid);
       }
 
      // Calculate the age locally and update the state
@@ -173,7 +179,13 @@ export const KidsPage = () => {
     }
 
     try {
-      const kidOrder = reorderedKids.map(kid => kid.id);
+      // const kidOrder = reorderedKids.map(kid => kid.id);
+      const reorderedIds = reorderedKids.map(kid => kid.id);
+      const defaultIds = [...reorderedKids]
+        .sort((a, b) => (a.age ?? Infinity) - (b.age ?? Infinity))
+        .map(kid => kid.id);
+      const isDefaultOrder = reorderedIds.every((id, i) => id === defaultIds[i]);
+      const kidOrder = isDefaultOrder ? [] : reorderedIds;
       if (user) {
         await updateUserKidOrder(user.username, kidOrder);
         setUser({...user, kidOrder: kidOrder});

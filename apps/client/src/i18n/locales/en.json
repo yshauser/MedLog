@@ -166,5 +166,12 @@
   },
   "manageUsers": {
     "title": "Manage Users"
+  },
+  "network": {
+    "offline": "Offline — changes will sync when back online",
+    "offlinePending": "Offline — {{count}} item(s) pending sync",
+    "syncing": "Syncing...",
+    "synced": "Synced",
+    "loginOffline": "No internet connection. Google sign-in is unavailable offline."
   }
 }

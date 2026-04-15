@@ -15,6 +15,7 @@ import ScheduledPage from '../Pages/ScheduledPage';
 import UserManagement from '../Pages/Settings/UserManagement';
 import MedicineManagement from '../Pages/Settings/MedicineManagement';
 import PublicRegistration from '../Pages/PublicRegistration';
+import { NetworkStatusBanner } from '../components/NetworkStatusBanner';
 
 export const MainLayout = () => {
   const [logData, setLogData] = useState<LogEntry[]>([]);
@@ -27,6 +28,7 @@ export const MainLayout = () => {
         <Route path="*" element={
           <div className="max-w-lg mx-auto h-screen flex flex-col shadow-lg">
             <Header />
+            <NetworkStatusBanner />
             {!user && <LoginDialog onClose={() => {}} />}
             <Routes>
               <Route path="/" element={<HomePage logData={logData} setLogData={setLogData} />} />

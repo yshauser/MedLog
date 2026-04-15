@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { MainLayout } from './Layouts/MainLayout';
 import { AuthProvider } from './Users/AuthContext';
+import { SyncProvider } from './context/SyncContext';
 import { SplashScreen } from './components/SplashScreen';
 import './i18n/i18n';
 
@@ -23,9 +24,11 @@ const App = () => {
     <>
       <SplashScreen isVisible={showSplash} />
       <AuthProvider>
-        <Router>
-          <MainLayout />
-        </Router>
+        <SyncProvider>
+          <Router>
+            <MainLayout />
+          </Router>
+        </SyncProvider>
       </AuthProvider>
     </>
   );

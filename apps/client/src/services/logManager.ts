@@ -1,10 +1,15 @@
 // logManager.ts
 import { LogEntry } from '../types';
-import { getLogs, addLog, updateLog as updateLogDoc, deleteLog as deleteLogDoc, batchUpdate } from './firestoreService';
+import { getLogs, getLogsFromCache, addLog, updateLog as updateLogDoc, deleteLog as deleteLogDoc, batchUpdate } from './firestoreService';
 
 export class LogManager {
   static async loadLogs(): Promise<LogEntry[]> {
     try {
+      if (!navigator.onLine) {
+        const data = await getLogsFromCache();
+        console.log('Log manager load from cache (offline)', { data });
+        return data;
+      }
       const data = await getLogs();
       console.log('Log manager load from Firestore', { data });
       return data;
@@ -20,6 +25,15 @@ export class LogManager {
       await batchUpdate('logs', logs);
     } catch (error) {
       console.error('Error saving logs:', error);
+      throw error;
+    }
+  }
+
+  static async addLog(newLog: LogEntry): Promise<void> {
+    try {
+      await addLog(newLog);
+    } catch (error) {
+      console.error('Error adding log:', error);
       throw error;
     }
   }

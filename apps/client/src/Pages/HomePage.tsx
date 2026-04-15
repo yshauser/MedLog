@@ -91,7 +91,10 @@ export const HomePage: React.FC<HomePageProps> = ({ logData, setLogData }) => {
       />
       <MedicineDialog
         isOpen={isQuickAddOpen}
-        onClose={() => setIsQuickAddOpen(false)}
+        onClose={() => {
+          console.log ('onClose quick add');
+          setIsQuickAddOpen(false);
+        }}
         logData={logData}
         setLogData={setLogData}
         isQuickAdd={true}

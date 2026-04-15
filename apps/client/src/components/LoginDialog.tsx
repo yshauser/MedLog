@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../Users/AuthContext';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 
 const LoginDialog = ({ onClose }: { onClose: () => void }) => {
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
   const [googleLoading, setGoogleLoading] = useState(false);
   const { login, loginWithGoogle } = useAuth();
+  const { isOnline } = useNetworkStatus();
+  const { t } = useTranslation();
 
   const handleLogin = () => {
     if (username.trim()) {
@@ -39,7 +43,7 @@ const LoginDialog = ({ onClose }: { onClose: () => void }) => {
         {/* Google Sign-In */}
         <button
           onClick={handleGoogleLogin}
-          disabled={googleLoading}
+          disabled={googleLoading || !isOnline}
           className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors mb-4 disabled:opacity-50"
         >
           <svg width="18" height="18" viewBox="0 0 48 48">
@@ -50,6 +54,10 @@ const LoginDialog = ({ onClose }: { onClose: () => void }) => {
           </svg>
           {googleLoading ? 'מתחבר...' : 'כניסה עם Google'}
         </button>
+
+        {!isOnline && (
+          <p className="text-amber-600 text-xs text-center mb-3">{t('network.loginOffline')}</p>
+        )}
 
         {import.meta.env.VITE_APP_ENV === 'development' && (
           <>

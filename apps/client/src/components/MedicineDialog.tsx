@@ -4,6 +4,8 @@ import { MedicineManager } from '../services/medicineManager';
 import { LogManager } from '../services/logManager';
 import { LogEntry } from '../types';
 import { useTranslation } from 'react-i18next';
+import { useSync } from '../context/SyncContext';
+
 
 interface MedicineDialogProps {
   isOpen: boolean;
@@ -21,6 +23,7 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
     isOpen, onClose, kidName: initialKidName, kidWeight: initialKidWeight, kidAge: initialKidAge, kidFavoriteMedicine, logData, setLogData, isQuickAdd = false }) => {
 // console.log('initials', { initialKidName, initialKidWeight, initialKidAge});
   const { t } = useTranslation();
+  const { addPending } = useSync();
   const isFirstRender = React.useRef(true);       // Use a ref to track if this is the first render
   const [temperature, setTemperature] = useState('');
   const [selectedMedicine, setSelectedMedicine] = useState('');
@@ -115,7 +118,7 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
       
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try{
+    try {
     const now = new Date();
     const logHour = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
     const logDate = String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+String(now.getFullYear()).slice(-2);
@@ -124,17 +127,15 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
       id: crypto.randomUUID(),  
       logDate, logHour, kidName, temperature, selectedMedicine, actualDosage
     };
-    const loadedLogs = await LogManager.loadLogs();
-    const updatedLogs = [...loadedLogs, newLogEntry];
-    setLogData(updatedLogs);
-    // console.log(' log entry:', {logData, loadedLogs, newLogEntry}); // For debugging
-
-    // Save to file
-    await LogManager.saveLogs(updatedLogs);
-
+    if (navigator.onLine) {
+      await LogManager.addLog(newLogEntry);
+    } else {
+      addPending('logs', 'add', newLogEntry);
+    }
+    setLogData(prev => [...prev, newLogEntry]);
     onClose();
-    }catch (error){
-      console.error ('Failed saving log entry: ', error)
+    } catch (error) {
+      console.error('Failed saving log entry: ', error);
       setLogData(logData);       // Optionally revert the state if save fails
       alert(t('medicineDialog.saveError')); // Optionally show an error message to the user
     }
@@ -144,7 +145,15 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-96 relative">
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute top-2 left-2 text-gray-400 hover:text-gray-600 text-xl leading-none"
+        aria-label={t('common.close')}
+      >
+        ×
+      </button>
       <h2 className="text-xl mb-4 text-right">{t('medicineDialog.title')}{kidName && ` - ${kidName}`}</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Kid Name field - shown only in quick add mode or if no initial kid name */}
@@ -205,56 +214,56 @@ export const MedicineDialog: React.FC<MedicineDialogProps > = ({
               </div>
             </div>
            )}
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">°C</span>
-          <div className="relative flex-1">
-              <input
-                type="text"  // Changed to text type for better control
-                inputMode="decimal"  // Shows numeric keyboard on mobile
-                className="w-full p-2 border rounded text-right"
-                placeholder={t('medicineDialog.temperature')}
-                value={temperature}
-                onChange={handleTemperatureChange}
-                onBlur={validateTemperature}  // Validate when focus is lost
-                pattern="[0-9]*[.]?[0-9]+"  // Allow only numbers and one decimal point
-              />
-                {(parseFloat(temperature) < 34 || parseFloat(temperature) > 43) &&
-                temperature !== "" ? (
-                  t('medicineDialog.tempError')) : ('')
-                }
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">°C</span>
+            <div className="relative flex-1">
+                <input
+                  type="text"  // Changed to text type for better control
+                  inputMode="decimal"  // Shows numeric keyboard on mobile
+                  className="w-full p-2 border rounded text-right"
+                  placeholder={t('medicineDialog.temperature')}
+                  value={temperature}
+                  onChange={handleTemperatureChange}
+                  onBlur={validateTemperature}  // Validate when focus is lost
+                  pattern="[0-9]*[.]?[0-9]+"  // Allow only numbers and one decimal point
+                />
+                  {(parseFloat(temperature) < 34 || parseFloat(temperature) > 43) &&
+                  temperature !== "" ? (
+                    t('medicineDialog.tempError')) : ('')
+                  }
             </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500"></span>
-          <div className="relative flex-1">
-            {/*Only show button when there's content */}
-            {selectedMedicine && (
-              <button
-                type="button"
-                className="absolute -right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                onClick={() => setSelectedMedicine('')}
-                aria-label="clear input"
-              >
-                ×
-              </button>
-            )}
-            <input
-              list="medicines"
-              className="w-full p-2 border rounded text-right"
-              placeholder={t('medicineDialog.medicine')}
-              value={selectedMedicine}
-              onChange={(e) => setSelectedMedicine(e.target.value)}
-            />
-            <datalist id="medicines">
-              {medicineGroups.map(group => (
-                group.data.map(medicine => (
-                  <option key={medicine.id} value={group.name} />
-                ))
-              ))}
-            </datalist>
           </div>
-        </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500"></span>
+            <div className="relative flex-1">
+              {/*Only show button when there's content */}
+              {selectedMedicine && (
+                <button
+                  type="button"
+                  className="absolute -right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  onClick={() => setSelectedMedicine('')}
+                  aria-label="clear input"
+                >
+                  ×
+                </button>
+              )}
+              <input
+                list="medicines"
+                className="w-full p-2 border rounded text-right"
+                placeholder={t('medicineDialog.medicine')}
+                value={selectedMedicine}
+                onChange={(e) => setSelectedMedicine(e.target.value)}
+              />
+              <datalist id="medicines">
+                {medicineGroups.map(group => (
+                  group.data.map(medicine => (
+                    <option key={medicine.id} value={group.name} />
+                  ))
+                ))}
+              </datalist>
+            </div>
+          </div>
 
           <div>
             <label className="block text-sm text-gray-600 mb-1 text-right">{t('medicineDialog.recommendedDosage')}</label>

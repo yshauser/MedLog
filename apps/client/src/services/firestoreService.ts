@@ -1,15 +1,14 @@
 import { 
   collection, 
   getDocs, 
+  getDocsFromCache,
   doc, 
   getDoc,
   setDoc, 
   deleteDoc, 
   query, 
   where,
-  updateDoc,
-  addDoc,
-  writeBatch
+  addDoc
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Kid, LogEntry, Medicine, TaskEntry } from '../types';
@@ -82,7 +81,9 @@ export const addDocument = async <T extends { id?: string }>(
   }
 };
 
-// Generic function to update a document in a collection
+// Generic function to update a document in a collection.
+// Uses setDoc with merge:true instead of updateDoc because updateDoc
+// can hang offline when the document isn't in the local cache.
 export const updateDocument = async <T>(
   collectionName: string,
   id: string,
@@ -90,7 +91,7 @@ export const updateDocument = async <T>(
 ): Promise<void> => {
   try {
     const docRef = doc(db, collectionName, id);
-    await updateDoc(docRef, stripUndefined(data) as any);
+    await setDoc(docRef, stripUndefined(data), { merge: true });
   } catch (error) {
     console.error(`Error updating document in ${collectionName}:`, error);
     throw error;
@@ -111,20 +112,21 @@ export const deleteDocument = async (
   }
 };
 
-// Function to update multiple documents in a batch
+// Function to update multiple documents individually.
+// Uses individual setDoc calls instead of writeBatch.commit() because
+// batch commits do not resolve offline (they wait for server ack),
+// while individual setDoc calls resolve immediately from local cache.
 export const batchUpdate = async <T extends { id: string }>(
   collectionName: string,
   documents: T[]
 ): Promise<void> => {
   try {
-    const batch = writeBatch(db);
-    
-    documents.forEach((document) => {
-      const docRef = doc(db, collectionName, document.id);
-      batch.set(docRef, stripUndefined(document));
-    });
-    
-    await batch.commit();
+    await Promise.all(
+      documents.map((document) => {
+        const docRef = doc(db, collectionName, document.id);
+        return setDoc(docRef, stripUndefined(document));
+      })
+    );
   } catch (error) {
     console.error(`Error batch updating documents in ${collectionName}:`, error);
     throw error;
@@ -223,6 +225,20 @@ export const getLogs = async (): Promise<LogEntry[]> => {
   return getCollection<LogEntry>('logs');
 };
 
+export const getLogsFromCache = async (): Promise<LogEntry[]> => {
+  try {
+    const querySnapshot = await getDocsFromCache(collection(db, 'logs'));
+    const data: LogEntry[] = [];
+    querySnapshot.forEach((doc) => {
+      data.push({ id: doc.id, ...doc.data() } as LogEntry);
+    });
+    return data;
+  } catch (error) {
+    console.error('Error getting logs from cache:', error);
+    return [];
+  }
+};
+
 export const addLog = async (log: LogEntry): Promise<string> => {
   return addDocument<LogEntry>('logs', log);
 };
@@ -238,7 +254,7 @@ export const deleteLog = async (id: string): Promise<void> => {
 export const updateUserKidOrder = async (userId: string, kidOrder: string[]): Promise<void> => {
   try {
     const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, { kidOrder });
+    await setDoc(userRef, { kidOrder }, { merge: true });
   } catch (error) {
     console.error('Error updating user kid order:', error);
     throw error;

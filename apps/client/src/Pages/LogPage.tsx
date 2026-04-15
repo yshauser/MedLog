@@ -41,20 +41,32 @@ export const LogPage: React.FC<LogPageProps> = ({ logData, setLogData }) => {
       }
 
       const loadedLogs = await LogManager.loadLogs();
-      // Combine existing logData with loadedLogs and remove duplicates based on 'id'
-      const combinedLogsMap = new Map();
-      [...logData, ...loadedLogs].forEach(log => combinedLogsMap.set(log.id, log));
-      const combinedLogs = Array.from(combinedLogsMap.values());
 
       // Filter by family if not admin-family
       const familyFilteredLogs = allowedKidNames
-        ? combinedLogs.filter(log => !log.kidName || allowedKidNames!.has(log.kidName))
-        : combinedLogs;
+        ? loadedLogs.filter(log => !log.kidName || allowedKidNames!.has(log.kidName))
+        : loadedLogs;
 
-      const filteredData = filterLogsByDate(familyFilteredLogs, loadOption);
-      setLogData(filteredData);
+      // Merge: keep any local entries not yet in the server/cache result
+      // (entries added offline that haven't synced yet)
+      setLogData(prev => {
+        const serverIds = new Set(familyFilteredLogs.map(l => l.id));
+        const localOnly = prev.filter(l => !serverIds.has(l.id));
+
+        // If back online, push any local-only entries to Firestore now
+        if (navigator.onLine && localOnly.length > 0) {
+          localOnly.forEach(entry => {
+            LogManager.addLog(entry).catch(err =>
+              console.error('Failed to sync offline entry to Firestore:', err)
+            );
+          });
+        }
+
+        const merged = [...familyFilteredLogs, ...localOnly];
+        return filterLogsByDate(merged, loadOption);
+      });
       
-      const nameExists = filteredData.some(entry => entry.kidName === filters.name);
+      const nameExists = logData.some(entry => entry.kidName === filters.name);
       if (!nameExists) {setFilters(prev => ({...prev, name: ''}));}
     };
     fetchLogs().catch(error => console.error('Error in useEffect fetchLogs:', error));
@@ -125,14 +137,10 @@ export const LogPage: React.FC<LogPageProps> = ({ logData, setLogData }) => {
       alert(t('log.invalidHour'));
       return;
     }
-    // save update with all entries to file, 
-    // but update to presentation (setLogData) only the loaded table
-    const loadedLogs = await LogManager.loadLogs();
-    const updatedLogs = loadedLogs.map(entry => entry.id === id ? { ...editedEntry, id } : entry);
-    setLogData(logData.map(entry => entry.id === id ? { ...editedEntry, id } : entry)); 
-    console.log ('Log save editedEntry', {updatedLogs});
     try {
-      await LogManager.saveLogs(updatedLogs); // Persist data to file
+      // Update only the single edited entry (works offline via setDoc merge)
+      await LogManager.updateLog({ ...editedEntry, id });
+      setLogData(logData.map(entry => entry.id === id ? { ...editedEntry, id } : entry));
       setEditingId(null);
       setEditedEntry(null);
     } catch (error) {

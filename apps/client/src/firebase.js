@@ -1,6 +1,6 @@
 // src/firebase.js
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, memoryLocalCache } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getMessaging } from 'firebase/messaging';
 
@@ -14,20 +14,27 @@ const firebaseConfig = {
     measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
   };
 
-// Replace these with your Firebase project configuration
-// const firebaseConfig = {
-//     apiKey: "YOUR_API_KEY",
-//     authDomain: "YOUR_PROJECT.firebaseapp.com",
-//     projectId: "YOUR_PROJECT",
-//     storageBucket: "YOUR_PROJECT.appspot.com",
-//     messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-//     appId: "YOUR_APP_ID"
-// };
-
 // Initialize Firebase services
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+
+// Enable Firestore offline persistence with IndexedDB cache.
+// Writes are queued locally when offline and auto-synced when back online.
+let db;
+let isUsingPersistentCache = false;
+try {
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+  });
+  isUsingPersistentCache = true;
+} catch (e) {
+  // Fallback to memory cache (e.g. private browsing mode)
+  console.warn('Persistent cache unavailable, falling back to memory cache:', e);
+  db = initializeFirestore(app, {
+    localCache: memoryLocalCache()
+  });
+}
+
 const auth = getAuth(app);
 const messaging = getMessaging(app);
 
-export { app, db, auth, messaging };
+export { app, db, auth, messaging, isUsingPersistentCache };
