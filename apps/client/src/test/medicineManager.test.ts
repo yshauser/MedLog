@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { MedicineManager } from '../services/medicineManager';
 import { MedicineType } from '../types';
+// MedicineType now includes: Suppositories, OralDrops, Inhalers, Ointments
 
 const mockSuspensionMedicine = {
   id: 'acamol-sus',
@@ -89,6 +90,89 @@ describe('MedicineManager.findMedicineByName', () => {
 
   it('returns undefined for an unknown name', () => {
     expect(MedicineManager.findMedicineByName('לא קיים')).toBeUndefined();
+  });
+});
+
+const mockSuppositoriesMedicine = {
+  id: 'supp-1',
+  name: 'Suppoctal',
+  hebName: 'סופוקטל',
+  type: MedicineType.Suppositories,
+  strength: '125mg',
+  targetAudience: 'ילדים',
+  activeIngredient: 'paracetamol',
+  entries: [
+    { age_low: 0, age_high: 2, dos_low: 1, dos_high: 1, hoursInterval_low: 6, hoursInterval_high: 8, maxDay: 4 },
+  ],
+};
+
+const mockOralDropsMedicine = {
+  id: 'drops-1',
+  name: 'Acamol Drops',
+  hebName: 'אקמול טיפות',
+  type: MedicineType.OralDrops,
+  strength: '100mg/ml',
+  targetAudience: 'ילדים',
+  activeIngredient: 'paracetamol',
+  entries: [
+    { age_low: 0, age_high: 1, dos_low: 2, dos_high: 3, hoursInterval_low: 6, hoursInterval_high: 8, maxDay: 4 },
+  ],
+};
+
+const mockInhalersMedicine = {
+  id: 'inh-1',
+  name: 'Ventolin',
+  hebName: 'ונטולין',
+  type: MedicineType.Inhalers,
+  strength: '100mcg',
+  targetAudience: 'כולם',
+  activeIngredient: 'salbutamol',
+  entries: [
+    { age_low: 4, age_high: undefined, dos_low: 1, dos_high: 2, hoursInterval_low: 4, hoursInterval_high: 6, maxDay: 8 },
+  ],
+};
+
+const mockOintmentsMedicine = {
+  id: 'oint-1',
+  name: 'Fucidin',
+  hebName: 'פוסידין',
+  type: MedicineType.Ointments,
+  strength: '2%',
+  targetAudience: 'כולם',
+  activeIngredient: 'fusidic acid',
+  entries: [
+    { age_low: 0, age_high: undefined, dos_low: 1, dos_high: 1, hoursInterval_low: 8, hoursInterval_high: 12, maxDay: 3 },
+  ],
+};
+
+describe('MedicineManager.calculateDosage - new types', () => {
+  beforeEach(() => {
+    (MedicineManager as any).medicineGroups = [
+      { name: mockSuppositoriesMedicine.hebName, data: [mockSuppositoriesMedicine] },
+      { name: mockOralDropsMedicine.hebName, data: [mockOralDropsMedicine] },
+      { name: mockInhalersMedicine.hebName, data: [mockInhalersMedicine] },
+      { name: mockOintmentsMedicine.hebName, data: [mockOintmentsMedicine] },
+    ];
+  });
+
+  it('returns correct dose for suppositories', () => {
+    expect(MedicineManager.calculateDosage('סופוקטל', undefined, 1)).toBe('1 פתילות');
+  });
+
+  it('returns mismatch for suppositories outside range', () => {
+    expect(MedicineManager.calculateDosage('סופוקטל', undefined, 5)).toBe('תרופה לא תואמת גיל/משקל');
+  });
+
+  it('returns correct dose range for oral drops', () => {
+    expect(MedicineManager.calculateDosage('אקמול טיפות', undefined, 0)).toBe('2-3 טיפות');
+  });
+
+  it('returns correct dose for inhalers', () => {
+    expect(MedicineManager.calculateDosage('ונטולין', undefined, 6)).toBe('1-2 שאיפות');
+  });
+
+  it('returns correct dose for ointments', () => {
+    expect(MedicineManager.calculateDosage('פוסידין', undefined, 10)).toBe('1 כמות למריחה');
   });
 });
 

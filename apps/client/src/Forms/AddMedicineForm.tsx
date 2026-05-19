@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Minus, X, RotateCw  } from 'lucide-react';
-import {Medicine, MedicineType, TargetAudience, SuspensionEntry, SuspensionMedicine, CapletEntry, CapletMedicine, GranulesEntry, GranulesMedicine, CapsulesEntry, CapsulesMedicine} from '../types';
+import {Medicine, MedicineType, TargetAudience, SuspensionEntry, SuspensionMedicine, CapletEntry, CapletMedicine, GranulesEntry, GranulesMedicine, CapsulesEntry, CapsulesMedicine, SuppositoriesEntry, SuppositoriesMedicine, OralDropsEntry, OralDropsMedicine, InhalersEntry, InhalersMedicine, OintmentsEntry, OintmentsMedicine} from '../types';
 import { constrainPoint } from '@fullcalendar/core/internal';
 import { useTranslation } from 'react-i18next';
 
@@ -51,6 +51,46 @@ const createEmptyCapsulesEntry = (): CapsulesEntry => ({
   maxDay: 0
 });
 
+const createEmptySuppositoriesEntry = (): SuppositoriesEntry => ({
+  age_low: 0,
+  age_high: undefined,
+  dos_low: 0,
+  dos_high: 0,
+  hoursInterval_low: 0,
+  hoursInterval_high: 0,
+  maxDay: 0
+});
+
+const createEmptyOralDropsEntry = (): OralDropsEntry => ({
+  age_low: 0,
+  age_high: undefined,
+  dos_low: 0,
+  dos_high: 0,
+  hoursInterval_low: 0,
+  hoursInterval_high: 0,
+  maxDay: 0
+});
+
+const createEmptyInhalersEntry = (): InhalersEntry => ({
+  age_low: 0,
+  age_high: undefined,
+  dos_low: 0,
+  dos_high: 0,
+  hoursInterval_low: 0,
+  hoursInterval_high: 0,
+  maxDay: 0
+});
+
+const createEmptyOintmentsEntry = (): OintmentsEntry => ({
+  age_low: 0,
+  age_high: undefined,
+  dos_low: 0,
+  dos_high: 0,
+  hoursInterval_low: 0,
+  hoursInterval_high: 0,
+  maxDay: 0
+});
+
 const createEmptySuspensionMedicine = (id: string): SuspensionMedicine => ({
   id,
   type: MedicineType.Suspension,
@@ -58,6 +98,7 @@ const createEmptySuspensionMedicine = (id: string): SuspensionMedicine => ({
   hebName: '',
   activeIngredient: '',
   targetAudience: TargetAudience.Kids,
+  prescriptionRequired: 'no',
   concentration: '',
   entries: [createEmptySuspensionEntry()]
 });
@@ -69,6 +110,7 @@ const createEmptyCapletMedicine = (id: string): CapletMedicine => ({
   hebName: '',
   activeIngredient: '',
   targetAudience: TargetAudience.Kids,
+  prescriptionRequired: 'no',
   strength: '',
   entries: [createEmptyCapletEntry()]
 });
@@ -80,6 +122,7 @@ const createEmptyGranulesMedicine = (id: string): GranulesMedicine => ({
   hebName: '',
   activeIngredient: '',
   targetAudience: TargetAudience.Kids,
+  prescriptionRequired: 'no',
   strength: '',
   entries: [createEmptyGranulesEntry()]
 });
@@ -91,8 +134,57 @@ const createEmptyCapsulesMedicine = (id: string): CapsulesMedicine => ({
   hebName: '',
   activeIngredient: '',
   targetAudience: TargetAudience.Kids,
+  prescriptionRequired: 'no',
   strength: '',
   entries: [createEmptyCapsulesEntry()]
+});
+
+const createEmptySuppositoriesMedicine = (id: string): SuppositoriesMedicine => ({
+  id,
+  type: MedicineType.Suppositories,
+  name: '',
+  hebName: '',
+  activeIngredient: '',
+  targetAudience: TargetAudience.Kids,
+  prescriptionRequired: 'no',
+  strength: '',
+  entries: [createEmptySuppositoriesEntry()]
+});
+
+const createEmptyOralDropsMedicine = (id: string): OralDropsMedicine => ({
+  id,
+  type: MedicineType.OralDrops,
+  name: '',
+  hebName: '',
+  activeIngredient: '',
+  targetAudience: TargetAudience.Kids,
+  prescriptionRequired: 'no',
+  strength: '',
+  entries: [createEmptyOralDropsEntry()]
+});
+
+const createEmptyInhalersMedicine = (id: string): InhalersMedicine => ({
+  id,
+  type: MedicineType.Inhalers,
+  name: '',
+  hebName: '',
+  activeIngredient: '',
+  targetAudience: TargetAudience.Kids,
+  prescriptionRequired: 'no',
+  strength: '',
+  entries: [createEmptyInhalersEntry()]
+});
+
+const createEmptyOintmentsMedicine = (id: string): OintmentsMedicine => ({
+  id,
+  type: MedicineType.Ointments,
+  name: '',
+  hebName: '',
+  activeIngredient: '',
+  targetAudience: TargetAudience.Kids,
+  prescriptionRequired: 'no',
+  strength: '',
+  entries: [createEmptyOintmentsEntry()]
 });
 
 export const AddMedicineForm: React.FC<AddMedicineFormProps> = ({
@@ -134,7 +226,15 @@ export const AddMedicineForm: React.FC<AddMedicineFormProps> = ({
       ? createEmptyCapletMedicine(generateId())
       : newType === MedicineType.Granules
       ? createEmptyGranulesMedicine(generateId())
-      : createEmptyCapsulesMedicine(generateId())
+      : newType === MedicineType.Capsules
+      ? createEmptyCapsulesMedicine(generateId())
+      : newType === MedicineType.Suppositories
+      ? createEmptySuppositoriesMedicine(generateId())
+      : newType === MedicineType.OralDrops
+      ? createEmptyOralDropsMedicine(generateId())
+      : newType === MedicineType.Inhalers
+      ? createEmptyInhalersMedicine(generateId())
+      : createEmptyOintmentsMedicine(generateId())
     );
   };
 
@@ -156,8 +256,28 @@ export const AddMedicineForm: React.FC<AddMedicineFormProps> = ({
         const newEntries = [...medicine.entries];
         newEntries[index] = { ...newEntries[index], [field]: numValue };
         return { ...medicine, entries: newEntries };
-      } else {
+      } else if (prev.type === MedicineType.Capsules) {
         const medicine = prev as CapsulesMedicine;
+        const newEntries = [...medicine.entries];
+        newEntries[index] = { ...newEntries[index], [field]: numValue };
+        return { ...medicine, entries: newEntries };
+      } else if (prev.type === MedicineType.Suppositories) {
+        const medicine = prev as SuppositoriesMedicine;
+        const newEntries = [...medicine.entries];
+        newEntries[index] = { ...newEntries[index], [field]: numValue };
+        return { ...medicine, entries: newEntries };
+      } else if (prev.type === MedicineType.OralDrops) {
+        const medicine = prev as OralDropsMedicine;
+        const newEntries = [...medicine.entries];
+        newEntries[index] = { ...newEntries[index], [field]: numValue };
+        return { ...medicine, entries: newEntries };
+      } else if (prev.type === MedicineType.Inhalers) {
+        const medicine = prev as InhalersMedicine;
+        const newEntries = [...medicine.entries];
+        newEntries[index] = { ...newEntries[index], [field]: numValue };
+        return { ...medicine, entries: newEntries };
+      } else {
+        const medicine = prev as OintmentsMedicine;
         const newEntries = [...medicine.entries];
         newEntries[index] = { ...newEntries[index], [field]: numValue };
         return { ...medicine, entries: newEntries };
@@ -176,9 +296,21 @@ export const AddMedicineForm: React.FC<AddMedicineFormProps> = ({
       } else if (prev.type === MedicineType.Granules) {
         const m = prev as GranulesMedicine;
         return { ...m, entries: [...m.entries, createEmptyGranulesEntry()] };
-      } else {
+      } else if (prev.type === MedicineType.Capsules) {
         const m = prev as CapsulesMedicine;
         return { ...m, entries: [...m.entries, createEmptyCapsulesEntry()] };
+      } else if (prev.type === MedicineType.Suppositories) {
+        const m = prev as SuppositoriesMedicine;
+        return { ...m, entries: [...m.entries, createEmptySuppositoriesEntry()] };
+      } else if (prev.type === MedicineType.OralDrops) {
+        const m = prev as OralDropsMedicine;
+        return { ...m, entries: [...m.entries, createEmptyOralDropsEntry()] };
+      } else if (prev.type === MedicineType.Inhalers) {
+        const m = prev as InhalersMedicine;
+        return { ...m, entries: [...m.entries, createEmptyInhalersEntry()] };
+      } else {
+        const m = prev as OintmentsMedicine;
+        return { ...m, entries: [...m.entries, createEmptyOintmentsEntry()] };
       }
     });
   };
@@ -194,8 +326,20 @@ export const AddMedicineForm: React.FC<AddMedicineFormProps> = ({
       } else if (prev.type === MedicineType.Granules) {
         const m = prev as GranulesMedicine;
         return { ...m, entries: m.entries.filter((_, i) => i !== index) };
-      } else {
+      } else if (prev.type === MedicineType.Capsules) {
         const m = prev as CapsulesMedicine;
+        return { ...m, entries: m.entries.filter((_, i) => i !== index) };
+      } else if (prev.type === MedicineType.Suppositories) {
+        const m = prev as SuppositoriesMedicine;
+        return { ...m, entries: m.entries.filter((_, i) => i !== index) };
+      } else if (prev.type === MedicineType.OralDrops) {
+        const m = prev as OralDropsMedicine;
+        return { ...m, entries: m.entries.filter((_, i) => i !== index) };
+      } else if (prev.type === MedicineType.Inhalers) {
+        const m = prev as InhalersMedicine;
+        return { ...m, entries: m.entries.filter((_, i) => i !== index) };
+      } else {
+        const m = prev as OintmentsMedicine;
         return { ...m, entries: m.entries.filter((_, i) => i !== index) };
       }
     });
@@ -222,7 +366,15 @@ export const AddMedicineForm: React.FC<AddMedicineFormProps> = ({
       ? createEmptyCapletMedicine(generateId())
       : formData.type === MedicineType.Granules
       ? createEmptyGranulesMedicine(generateId())
-      : createEmptyCapsulesMedicine(generateId())
+      : formData.type === MedicineType.Capsules
+      ? createEmptyCapsulesMedicine(generateId())
+      : formData.type === MedicineType.Suppositories
+      ? createEmptySuppositoriesMedicine(generateId())
+      : formData.type === MedicineType.OralDrops
+      ? createEmptyOralDropsMedicine(generateId())
+      : formData.type === MedicineType.Inhalers
+      ? createEmptyInhalersMedicine(generateId())
+      : createEmptyOintmentsMedicine(generateId())
     ); 
   }
 
@@ -262,6 +414,10 @@ export const AddMedicineForm: React.FC<AddMedicineFormProps> = ({
               <option value="caplets">{t('addMedicineForm.caplets')}</option>
               <option value="granules">{t('addMedicineForm.granules')}</option>
               <option value="capsules">{t('addMedicineForm.capsules')}</option>
+              <option value="suppositories">{t('addMedicineForm.suppositories')}</option>
+              <option value="oralDrops">{t('addMedicineForm.oralDrops')}</option>
+              <option value="inhalers">{t('addMedicineForm.inhalers')}</option>
+              <option value="ointments">{t('addMedicineForm.ointments')}</option>
             </select>
 
             <select
@@ -327,6 +483,16 @@ export const AddMedicineForm: React.FC<AddMedicineFormProps> = ({
                 required
               />
             )}
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.prescriptionRequired === 'yes'}
+                onChange={(e) => setFormData(prev => ({ ...prev, prescriptionRequired: e.target.checked ? 'yes' : 'no' }))}
+                className="w-4 h-4"
+              />
+              <span>{t('addMedicineForm.prescriptionRequired')}</span>
+            </label>
           </div>
 
           <div className="space-y-4">

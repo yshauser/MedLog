@@ -57,7 +57,10 @@ export enum MedicineType {
   Caplets = "caplets",
   Granules = "granules",
   Capsules = "capsules",
-  // Suppository = "suppository"
+  Suppositories = "suppositories",
+  OralDrops = "oralDrops",
+  Inhalers = "inhalers",
+  Ointments = "ointments",
 }
 
 export enum TargetAudience {
@@ -74,6 +77,7 @@ export interface MedicineBase {
   targetAudience: string;
   activeIngredient: string;
   hebName: string;
+  prescriptionRequired?: 'yes' | 'no';
   aliases?: {
     name: string;
     hebName: string;
@@ -121,6 +125,46 @@ export interface CapsulesEntry {
   maxDay: number;
 }
 
+export interface SuppositoriesEntry {
+  age_low: number;
+  age_high?: number;
+  dos_low: number;
+  dos_high: number;
+  hoursInterval_low: number;
+  hoursInterval_high: number;
+  maxDay: number;
+}
+
+export interface OralDropsEntry {
+  age_low: number;
+  age_high?: number;
+  dos_low: number;
+  dos_high: number;
+  hoursInterval_low: number;
+  hoursInterval_high: number;
+  maxDay: number;
+}
+
+export interface InhalersEntry {
+  age_low: number;
+  age_high?: number;
+  dos_low: number;
+  dos_high: number;
+  hoursInterval_low: number;
+  hoursInterval_high: number;
+  maxDay: number;
+}
+
+export interface OintmentsEntry {
+  age_low: number;
+  age_high?: number;
+  dos_low: number;
+  dos_high: number;
+  hoursInterval_low: number;
+  hoursInterval_high: number;
+  maxDay: number;
+}
+
 export interface SuspensionMedicine extends MedicineBase {
   type: MedicineType.Suspension;
   concentration: string;
@@ -145,7 +189,31 @@ export interface CapsulesMedicine extends MedicineBase {
   entries: CapsulesEntry[];
 }
 
-export type Medicine = SuspensionMedicine | CapletMedicine | GranulesMedicine | CapsulesMedicine;
+export interface SuppositoriesMedicine extends MedicineBase {
+  type: MedicineType.Suppositories;
+  strength: string;
+  entries: SuppositoriesEntry[];
+}
+
+export interface OralDropsMedicine extends MedicineBase {
+  type: MedicineType.OralDrops;
+  strength: string;
+  entries: OralDropsEntry[];
+}
+
+export interface InhalersMedicine extends MedicineBase {
+  type: MedicineType.Inhalers;
+  strength: string;
+  entries: InhalersEntry[];
+}
+
+export interface OintmentsMedicine extends MedicineBase {
+  type: MedicineType.Ointments;
+  strength: string;
+  entries: OintmentsEntry[];
+}
+
+export type Medicine = SuspensionMedicine | CapletMedicine | GranulesMedicine | CapsulesMedicine | SuppositoriesMedicine | OralDropsMedicine | InhalersMedicine | OintmentsMedicine;
 
 ////////////////////////////
 //// Registration   ////////

@@ -1,4 +1,4 @@
-import {SuspensionMedicine, CapletMedicine, GranulesMedicine, Medicine, CapsulesMedicine} from '../types';
+import {SuspensionMedicine, CapletMedicine, GranulesMedicine, Medicine, CapsulesMedicine, SuppositoriesMedicine, OralDropsMedicine, InhalersMedicine, OintmentsMedicine} from '../types';
 import { getMedicines, getCollection } from './firestoreService';
 
 interface DefaultUnits {
@@ -40,6 +40,11 @@ interface MedicinesData {
   suspension: SuspensionMedicine[];
   caplets: CapletMedicine[];
   granules: GranulesMedicine[];
+  capsules: CapsulesMedicine[];
+  suppositories: SuppositoriesMedicine[];
+  oralDrops: OralDropsMedicine[];
+  inhalers: InhalersMedicine[];
+  ointments: OintmentsMedicine[];
 }
 
 interface MedicineDataFile {
@@ -85,6 +90,10 @@ export class MedicineManager {
       const capletMeds = medicines.filter(med => med.type === 'caplets');
       const capsuleMeds = medicines.filter(med => med.type === 'capsules');
       const granuleMeds = medicines.filter(med => med.type === 'granules');
+      const suppositoriesMeds = medicines.filter(med => med.type === 'suppositories');
+      const oralDropsMeds = medicines.filter(med => med.type === 'oralDrops');
+      const inhalersMeds = medicines.filter(med => med.type === 'inhalers');
+      const ointmentsMeds = medicines.filter(med => med.type === 'ointments');
       
       // Initialize medicine groups
       this.medicineGroups = [
@@ -101,6 +110,22 @@ export class MedicineManager {
           data: [med]
         })),
         ...granuleMeds.map(med => ({
+          name: med.hebName,
+          data: [med]
+        })),
+        ...suppositoriesMeds.map(med => ({
+          name: med.hebName,
+          data: [med]
+        })),
+        ...oralDropsMeds.map(med => ({
+          name: med.hebName,
+          data: [med]
+        })),
+        ...inhalersMeds.map(med => ({
+          name: med.hebName,
+          data: [med]
+        })),
+        ...ointmentsMeds.map(med => ({
           name: med.hebName,
           data: [med]
         }))
@@ -205,6 +230,50 @@ export class MedicineManager {
           return `${entry.dos_low}-${entry.dos_high} אריזות גרנולות`;
         }
         return 'תרופה לא תואמת גיל/משקל';
+      } else if (medicine.type === 'suppositories') {
+        const entry = (medicine as SuppositoriesMedicine).entries.find(
+          e => (kidAge as number) >= e.age_low && (!e.age_high || (kidAge as number) <= e.age_high)
+        );
+        if (entry?.dos_low) {
+          if (!entry.dos_high || entry.dos_high === entry.dos_low) {
+            return `${entry.dos_low} פתילות`;
+          }
+          return `${entry.dos_low}-${entry.dos_high} פתילות`;
+        }
+        return 'תרופה לא תואמת גיל/משקל';
+      } else if (medicine.type === 'oralDrops') {
+        const entry = (medicine as OralDropsMedicine).entries.find(
+          e => (kidAge as number) >= e.age_low && (!e.age_high || (kidAge as number) <= e.age_high)
+        );
+        if (entry?.dos_low) {
+          if (!entry.dos_high || entry.dos_high === entry.dos_low) {
+            return `${entry.dos_low} טיפות`;
+          }
+          return `${entry.dos_low}-${entry.dos_high} טיפות`;
+        }
+        return 'תרופה לא תואמת גיל/משקל';
+      } else if (medicine.type === 'inhalers') {
+        const entry = (medicine as InhalersMedicine).entries.find(
+          e => (kidAge as number) >= e.age_low && (!e.age_high || (kidAge as number) <= e.age_high)
+        );
+        if (entry?.dos_low) {
+          if (!entry.dos_high || entry.dos_high === entry.dos_low) {
+            return `${entry.dos_low} שאיפות`;
+          }
+          return `${entry.dos_low}-${entry.dos_high} שאיפות`;
+        }
+        return 'תרופה לא תואמת גיל/משקל';
+      } else if (medicine.type === 'ointments') {
+        const entry = (medicine as OintmentsMedicine).entries.find(
+          e => (kidAge as number) >= e.age_low && (!e.age_high || (kidAge as number) <= e.age_high)
+        );
+        if (entry?.dos_low) {
+          if (!entry.dos_high || entry.dos_high === entry.dos_low) {
+            return `${entry.dos_low} כמות למריחה`;
+          }
+          return `${entry.dos_low}-${entry.dos_high} כמות למריחה`;
+        }
+        return 'תרופה לא תואמת גיל/משקל';
       }    }
     return '';
   }
@@ -256,6 +325,38 @@ export class MedicineManager {
           return granulesItem.entries.every(entry => entry[key1] === entry[key2]);
         }
 
+        return true;
+      });
+    } else if (firstItem.type === "suppositories") {
+      return data.every(item => {
+        const suppositoriesItem = item as SuppositoriesMedicine;
+        if (key1 === "dos_low" && key2 === "dos_high") {
+          return suppositoriesItem.entries.every(entry => entry[key1] === entry[key2]);
+        }
+        return true;
+      });
+    } else if (firstItem.type === "oralDrops") {
+      return data.every(item => {
+        const oralDropsItem = item as OralDropsMedicine;
+        if (key1 === "dos_low" && key2 === "dos_high") {
+          return oralDropsItem.entries.every(entry => entry[key1] === entry[key2]);
+        }
+        return true;
+      });
+    } else if (firstItem.type === "inhalers") {
+      return data.every(item => {
+        const inhalersItem = item as InhalersMedicine;
+        if (key1 === "dos_low" && key2 === "dos_high") {
+          return inhalersItem.entries.every(entry => entry[key1] === entry[key2]);
+        }
+        return true;
+      });
+    } else if (firstItem.type === "ointments") {
+      return data.every(item => {
+        const ointmentsItem = item as OintmentsMedicine;
+        if (key1 === "dos_low" && key2 === "dos_high") {
+          return ointmentsItem.entries.every(entry => entry[key1] === entry[key2]);
+        }
         return true;
       });
     }
