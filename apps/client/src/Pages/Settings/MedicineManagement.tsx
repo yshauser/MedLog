@@ -188,7 +188,7 @@ export const MedicineManagement = () => {
 
         <AddMedicineForm
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => { setIsModalOpen(false); setEditingMedicine(null); }}
           onSave={handleSave}
           editingMedicine={editingMedicine}
           />

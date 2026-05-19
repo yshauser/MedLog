@@ -200,6 +200,8 @@ export const AddMedicineForm: React.FC<AddMedicineFormProps> = ({
   useEffect(() => {
     if (editingMedicine) {
       setFormData(editingMedicine);
+    } else {
+      setFormData(createEmptySuspensionMedicine(generateId()));
     }
   },[editingMedicine]);
 
@@ -646,12 +648,21 @@ export const AddMedicineForm: React.FC<AddMedicineFormProps> = ({
             </div>
           )}
 
-          <button
-            type="submit"
-            className="w-full bg-emerald-600 text-white p-3 rounded hover:bg-emerald-700 transition-colors"
-          >
-            {editingMedicine ? t('addMedicineForm.saveChanges') : t('addMedicineForm.addMedicine')}
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              className="flex-1 bg-emerald-600 text-white p-3 rounded hover:bg-emerald-700 transition-colors"
+            >
+              {editingMedicine ? t('addMedicineForm.saveChanges') : t('addMedicineForm.addMedicine')}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 bg-gray-200 text-gray-700 p-3 rounded hover:bg-gray-300 transition-colors"
+            >
+              {t('common.cancel')}
+            </button>
+          </div>
         </form>
       </div>
     </div>
