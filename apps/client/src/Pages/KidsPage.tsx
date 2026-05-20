@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Kid } from '../types.ts';
 import { calculateAge, KidManager, updateDateYearTo4digits } from '../services/kidManager.ts';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -26,7 +27,8 @@ export const KidsPage = () => {
   const [kidToDelete, setKidToDelete] = useState<string | null>(null);
 
   const isAdminFamilyMember = user?.familyId === ADMIN_FAMILY_ID;
-
+  const location = useLocation();
+  
   const filterKidsForCurrentUser = (kidsData: Kid[], familyFilter = selectedFamilyFilter) => {
     if (!user) {
       setFilteredKids([]);
@@ -211,6 +213,12 @@ export const KidsPage = () => {
   useEffect(() => {
     filterKidsForCurrentUser(kids, selectedFamilyFilter);
   }, [kids]);
+
+  useEffect (() => {
+    if (location.state?.openAddForm) {
+      setIsModalOpen(true);
+    }
+  }, []);
 
   return (
     <main className="flex-1 flex flex-col items-center justify-center p-4 bg-white">

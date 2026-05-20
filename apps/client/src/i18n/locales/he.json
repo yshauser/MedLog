@@ -36,7 +36,8 @@
     "confirmDelete": "האם אתה בטוח שברצונך למחוק?"
   },
   "home": {
-    "logMedicine": "תיעוד תרופה/חום"
+    "logMedicine": "תיעוד תרופה/חום",
+    "noKids": "הוסף בן משפחה"
   },
   "log": {
     "title": "יומן",

@@ -36,7 +36,8 @@
     "confirmDelete": "Are you sure you want to delete?"
   },
   "home": {
-    "logMedicine": "Log Medicine / Fever"
+    "logMedicine": "Log Medicine / Fever",
+    "noKids": "add family member"
   },
   "log": {
     "title": "Log",

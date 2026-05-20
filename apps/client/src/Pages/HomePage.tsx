@@ -4,6 +4,7 @@ import { MedicineDialog } from '../components/MedicineDialog';
 import { LogEntry, Kid } from '../types';
 import { useAuth } from '../Users/AuthContext';
 import { useTranslation } from 'react-i18next';
+import {useNavigate} from 'react-router-dom';
 
 const ADMIN_FAMILY_ID = 'admin-family';
 
@@ -21,6 +22,7 @@ export const HomePage: React.FC<HomePageProps> = ({ logData, setLogData }) => {
   const [selectedFamilyFilter, setSelectedFamilyFilter] = useState<string>('all');
 
   const isAdminFamilyMember = user?.familyId === ADMIN_FAMILY_ID;
+  const navigate = useNavigate();
 
   const filteredKids = isAdminFamilyMember && selectedFamilyFilter !== 'all'
     ? kids.filter(k => k.familyId === selectedFamilyFilter)
@@ -68,12 +70,21 @@ export const HomePage: React.FC<HomePageProps> = ({ logData, setLogData }) => {
         }
       </div>
       
-      <button 
+      {/* <button 
         onClick={() => setIsQuickAddOpen(true)}
         className="bg-emerald-600 text-white w-32 h-32 rounded-full shadow-md hover:bg-emerald-700 transition-colors flex items-center justify-center text-xl"
       >
         {t('home.logMedicine')}
-      </button>
+      </button> */}
+      {filteredKids.length == 0 && (
+        <button 
+          onClick={() => navigate('/kids', { state: { openAddForm: true } })}
+          className="bg-emerald-600 text-white w-32 h-32 rounded-full shadow-md hover:bg-emerald-700 transition-colors flex items-center justify-center text-xl"
+        >
+          {t('home.noKids')}
+        </button>
+      )}
+
 
       <MedicineDialog
         isOpen={isDialogOpen}

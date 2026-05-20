@@ -37,7 +37,14 @@ const LoginDialog = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white p-6 rounded-md shadow-lg w-80">
+      <div className="bg-white p-6 rounded-md shadow-lg w-80 relative">
+        <button
+          onClick={onClose}
+          className="absolute top-2 left-2 text-gray-400 hover:text-gray-600 text-xl leading-none"
+          aria-label="סגור"
+        >
+          ✕
+        </button>
         <h2 className="text-lg font-semibold mb-4 text-center">התחבר</h2>
 
         {/* Google Sign-In */}
