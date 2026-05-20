@@ -140,8 +140,11 @@ export const MedicinesPage = () => {
       {selectedMedicine && (
         <div className="w-full mb-8">
           <h2 className="text-xl text-emerald-600 mb-2">{selectedMedicine.name}</h2>
-          <p className={`text-sm font-medium mb-4 ${selectedMedicine.data[0].prescriptionRequired === 'yes' ? 'text-red-600' : 'text-green-600'}`}>
+          <p className={`text-sm font-medium mb-1 ${selectedMedicine.data[0].prescriptionRequired === 'yes' ? 'text-red-600' : 'text-green-600'}`}>
             {selectedMedicine.data[0].prescriptionRequired === 'yes' ? 'חייב מרשם רופא' : 'תרופה ללא מרשם'}
+          </p>
+          <p className="text-sm text-gray-600 mb-4">
+            חומר פעיל: {(selectedMedicine.data[0].activeIngredients && selectedMedicine.data[0].activeIngredients.length > 0 ? selectedMedicine.data[0].activeIngredients : [selectedMedicine.data[0].activeIngredient]).join(', ')}
           </p>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
@@ -194,10 +197,10 @@ export const MedicinesPage = () => {
                     </>
                   ) : selectedMedicine.data[0].type === "oralDrops" ? (
                     <>
-                      <th className="border p-2 text-right">גיל מינימום (שנים)</th>
-                      <th className="border p-2 text-right">גיל מקסימום (שנים)</th>
+                      <th className="border p-2 text-right">משקל מינימום (ק״ג)</th>
+                      <th className="border p-2 text-right">משקל מקסימום (ק״ג)</th>
                       <th className="border p-2 text-right">מינון (טיפות)</th>
-                      <th className="border p-2 text-right">שעות בין מינונים</th>
+                      <th className="border p-2 text-right">פעמים ביום</th>
                       <th className="border p-2 text-right">מקסימום ליום</th>
                     </>
                   ) : selectedMedicine.data[0].type === "inhalers" ? (
@@ -230,10 +233,14 @@ export const MedicinesPage = () => {
                           ) : (
                             <>
                               <td className="border p-2 text-right">{(item as SuspensionMedicine["entries"][0]).w_low}</td>
-                              <td className="border p-2 text-right">{(item as SuspensionMedicine["entries"][0]).w_high}</td>
+                              <td className="border p-2 text-right">{(item as SuspensionMedicine["entries"][0]).w_high ?? '∞'}</td>
                             </>
                           )}
-                          <td className="border p-2 text-right">{(item as SuspensionMedicine["entries"][0]).dos}</td>
+                          <td className="border p-2 text-right">
+                            {(item as SuspensionMedicine["entries"][0]).dos_high && (item as SuspensionMedicine["entries"][0]).dos_high !== (item as SuspensionMedicine["entries"][0]).dos_low
+                              ? `${(item as SuspensionMedicine["entries"][0]).dos_low}–${(item as SuspensionMedicine["entries"][0]).dos_high}`
+                              : (item as SuspensionMedicine["entries"][0]).dos_low}
+                          </td>
                           {MedicineManager.hasEqualValues(selectedMedicine.data, 'perDay_low', 'perDay_high') ? (
                             <td className="border p-2 text-right">{(item as SuspensionMedicine["entries"][0]).perDay_low}</td>
                           ) : (
@@ -241,6 +248,9 @@ export const MedicinesPage = () => {
                               <td className="border p-2 text-right">{(item as SuspensionMedicine["entries"][0]).perDay_high} - {(item as SuspensionMedicine["entries"][0]).perDay_low}</td>
                             </>
                           )}
+                          {(item as SuspensionMedicine["entries"][0]).formulaX ? (
+                            <td className="border p-2 text-right text-emerald-700" colSpan={99}>{(item as SuspensionMedicine["entries"][0]).formulaX} מ&quot;ל ל-{(item as SuspensionMedicine["entries"][0]).formulaY} ק&quot;ג ליום</td>
+                          ) : null}
                         </>
                       )
                     ) : selectedMedicine.data[0].type === "caplets" ? (
@@ -309,19 +319,24 @@ export const MedicinesPage = () => {
                       </>
                     ) : selectedMedicine.data[0].type === "oralDrops" ? (
                       <>
-                        <td className="border p-2 text-right">{(item as OralDropsMedicine["entries"][0]).age_low}</td>
-                        <td className="border p-2 text-right">{(item as OralDropsMedicine["entries"][0]).age_high ? ((item as OralDropsMedicine["entries"][0]).age_high) : ('∞')}</td>
-                        {(item as OralDropsMedicine["entries"][0]).dos_high === (item as OralDropsMedicine["entries"][0]).dos_low ? (
-                          <td className="border p-2 text-right">{(item as OralDropsMedicine["entries"][0]).dos_low}</td>
+                        <td className="border p-2 text-right">{(item as OralDropsMedicine["entries"][0]).w_low}</td>
+                        <td className="border p-2 text-right">{(item as OralDropsMedicine["entries"][0]).w_high ? ((item as OralDropsMedicine["entries"][0]).w_high) : ('∞')}</td>
+                        <td className="border p-2 text-right">
+                          {(item as OralDropsMedicine["entries"][0]).dos_high && (item as OralDropsMedicine["entries"][0]).dos_high !== (item as OralDropsMedicine["entries"][0]).dos_low
+                            ? `${(item as OralDropsMedicine["entries"][0]).dos_low}–${(item as OralDropsMedicine["entries"][0]).dos_high}`
+                            : (item as OralDropsMedicine["entries"][0]).dos_low}
+                        </td>
+                        {(item as OralDropsMedicine["entries"][0]).perDay_high === (item as OralDropsMedicine["entries"][0]).perDay_low ? (
+                          <td className="border p-2 text-right">{(item as OralDropsMedicine["entries"][0]).perDay_low}</td>
                         ) : (
                           <td className="border p-2 text-right">
-                            {(item as OralDropsMedicine["entries"][0]).dos_high} - {(item as OralDropsMedicine["entries"][0]).dos_low}
+                            {(item as OralDropsMedicine["entries"][0]).perDay_high} - {(item as OralDropsMedicine["entries"][0]).perDay_low}
                           </td>
                         )}
-                        <td className="border p-2 text-right">
-                          {(item as OralDropsMedicine["entries"][0]).hoursInterval_high} - {(item as OralDropsMedicine["entries"][0]).hoursInterval_low}
-                        </td>
                         <td className="border p-2 text-right">{(item as OralDropsMedicine["entries"][0]).maxDay}</td>
+                        {(item as OralDropsMedicine["entries"][0]).formulaX ? (
+                          <td className="border p-2 text-right text-emerald-700">{(item as OralDropsMedicine["entries"][0]).formulaX} טיפות ל-{(item as OralDropsMedicine["entries"][0]).formulaY} ק&quot;ג ליום</td>
+                        ) : null}
                       </>
                     ) : selectedMedicine.data[0].type === "inhalers" ? (
                       <>

@@ -191,10 +191,12 @@ export class MedicineManager {
 
       if (medicine.type === 'suspension') {
         const entry = medicine.entries.find(
-          e => (kidWeight as number) >= e.w_low && (kidWeight as number) <= e.w_high
+          e => (kidWeight as number) >= e.w_low && (!e.w_high || (kidWeight as number) <= e.w_high)
         );
-        if (entry?.dos) {
-          return `${entry.dos} מ"ל`;
+        if (entry?.dos_low) {
+          return entry.dos_high && entry.dos_high !== entry.dos_low
+            ? `${entry.dos_low}-${entry.dos_high} מ"ל`
+            : `${entry.dos_low} מ"ל`;
         }
         return 'תרופה לא תואמת גיל/משקל';
       } else if (medicine.type === 'caplets') {
@@ -243,13 +245,12 @@ export class MedicineManager {
         return 'תרופה לא תואמת גיל/משקל';
       } else if (medicine.type === 'oralDrops') {
         const entry = (medicine as OralDropsMedicine).entries.find(
-          e => (kidAge as number) >= e.age_low && (!e.age_high || (kidAge as number) <= e.age_high)
+          e => (kidWeight as number) >= e.w_low && (!e.w_high || (kidWeight as number) <= e.w_high)
         );
         if (entry?.dos_low) {
-          if (!entry.dos_high || entry.dos_high === entry.dos_low) {
-            return `${entry.dos_low} טיפות`;
-          }
-          return `${entry.dos_low}-${entry.dos_high} טיפות`;
+          return entry.dos_high && entry.dos_high !== entry.dos_low
+            ? `${entry.dos_low}-${entry.dos_high} טיפות`
+            : `${entry.dos_low} טיפות`;
         }
         return 'תרופה לא תואמת גיל/משקל';
       } else if (medicine.type === 'inhalers') {
@@ -338,7 +339,11 @@ export class MedicineManager {
     } else if (firstItem.type === "oralDrops") {
       return data.every(item => {
         const oralDropsItem = item as OralDropsMedicine;
-        if (key1 === "dos_low" && key2 === "dos_high") {
+        if (key1 === "w_low" && key2 === "w_high") {
+          return oralDropsItem.entries.every(entry => entry[key1] === entry[key2]);
+        }
+
+        if (key1 === "perDay_low" && key2 === "perDay_high") {
           return oralDropsItem.entries.every(entry => entry[key1] === entry[key2]);
         }
         return true;

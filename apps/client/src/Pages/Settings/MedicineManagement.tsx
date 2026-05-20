@@ -134,9 +134,11 @@ export const MedicineManagement = () => {
       const nameMatch = medicine.name
         .toLowerCase()
         .includes(filters.name.toLowerCase());
-      const ingredientMatch = medicine.data[0].activeIngredient
-        .toLowerCase()
-        .includes(filters.activeIngredient.toLowerCase());
+      const ingredientMatch = (
+        medicine.data[0].activeIngredients && medicine.data[0].activeIngredients.length > 0
+          ? medicine.data[0].activeIngredients.join(', ')
+          : medicine.data[0].activeIngredient
+      ).toLowerCase().includes(filters.activeIngredient.toLowerCase());
       const typeMatch = getMedicineTypeDisplay(medicine.data[0].type as MedicineType)
         .toLowerCase()
         .includes(filters.type.toLowerCase());
@@ -281,7 +283,11 @@ export const MedicineManagement = () => {
                           {medicine.name}
                         </div>
                       </td>
-                      <td className="p-3 text-right">{medicine.data[0].activeIngredient}</td>
+                      <td className="p-3 text-right">{
+                        (medicine.data[0].activeIngredients ?? []).length > 0
+                          ? (medicine.data[0].activeIngredients as string[]).join(', ')
+                          : medicine.data[0].activeIngredient
+                      }</td>
                       <td className="p-3 text-right">{getMedicineTypeDisplay(medicine.data[0].type as MedicineType)}</td>
                       <td className="p-3 text-right">{getTargetAudienceDisplay(medicine.data[0].targetAudience as TargetAudience)}</td>
                     </tr>
@@ -392,8 +398,12 @@ export const MedicineManagement = () => {
                                 {medicine.data[0].type === "suspension" ? (
                                   <>
                                     <td className="border p-2 text-right">{(item as SuspensionMedicine["entries"][0]).w_low}</td>
-                                    <td className="border p-2 text-right">{(item as SuspensionMedicine["entries"][0]).w_high}</td>
-                                    <td className="border p-2 text-right">{(item as SuspensionMedicine["entries"][0]).dos}</td>
+                                    <td className="border p-2 text-right">{(item as SuspensionMedicine["entries"][0]).w_high ?? '∞'}</td>
+                                    <td className="border p-2 text-right">
+                                      {(item as SuspensionMedicine["entries"][0]).dos_high && (item as SuspensionMedicine["entries"][0]).dos_high !== (item as SuspensionMedicine["entries"][0]).dos_low
+                                        ? `${(item as SuspensionMedicine["entries"][0]).dos_low}–${(item as SuspensionMedicine["entries"][0]).dos_high}`
+                                        : (item as SuspensionMedicine["entries"][0]).dos_low}
+                                    </td>
                                     <td className="border p-2 text-right">
                                       {(item as SuspensionMedicine["entries"][0]).perDay_high === (item as SuspensionMedicine["entries"][0]).perDay_low
                                         ? (item as SuspensionMedicine["entries"][0]).perDay_low
@@ -458,16 +468,21 @@ export const MedicineManagement = () => {
                                   </>
                                 ) : medicine.data[0].type === "oralDrops" ? (
                                   <>
-                                    <td className="border p-2 text-right">{(item as OralDropsMedicine["entries"][0]).age_low}</td>
-                                    <td className="border p-2 text-right">{(item as OralDropsMedicine["entries"][0]).age_high ? ((item as OralDropsMedicine["entries"][0]).age_high):('∞')}</td>
+                                    <td className="border p-2 text-right">{(item as OralDropsMedicine["entries"][0]).w_low}</td>
+                                    <td className="border p-2 text-right">{(item as OralDropsMedicine["entries"][0]).w_high ?? '∞'}</td>
                                     <td className="border p-2 text-right">
-                                      {(item as OralDropsMedicine["entries"][0]).dos_high === (item as OralDropsMedicine["entries"][0]).dos_low
-                                        ? (item as OralDropsMedicine["entries"][0]).dos_low
-                                        : `${(item as OralDropsMedicine["entries"][0]).dos_high} - ${(item as OralDropsMedicine["entries"][0]).dos_low}`}
+                                      {(item as OralDropsMedicine["entries"][0]).dos_high && (item as OralDropsMedicine["entries"][0]).dos_high !== (item as OralDropsMedicine["entries"][0]).dos_low
+                                        ? `${(item as OralDropsMedicine["entries"][0]).dos_low}–${(item as OralDropsMedicine["entries"][0]).dos_high}`
+                                        : (item as OralDropsMedicine["entries"][0]).dos_low}
                                     </td>
                                     <td className="border p-2 text-right">
+                                      {(item as OralDropsMedicine["entries"][0]).perDay_high === (item as OralDropsMedicine["entries"][0]).perDay_low
+                                        ? (item as OralDropsMedicine["entries"][0]).perDay_low
+                                        : `${(item as OralDropsMedicine["entries"][0]).perDay_high} - ${(item as OralDropsMedicine["entries"][0]).perDay_low}`}
+                                    </td>
+                                    {/* <td className="border p-2 text-right">
                                       {`${(item as OralDropsMedicine["entries"][0]).hoursInterval_high} - ${(item as OralDropsMedicine["entries"][0]).hoursInterval_low}`}
-                                    </td>
+                                    </td> */}
                                     <td className="border p-2 text-right">{(item as OralDropsMedicine["entries"][0]).maxDay}</td>
                                   </>
                                 ) : medicine.data[0].type === "inhalers" ? (

@@ -13,8 +13,7 @@ interface AddMedicineFormProps {
 
 const createEmptySuspensionEntry = (): SuspensionEntry => ({
   w_low: 0,
-  w_high: 0,
-  dos: 0,
+  dos_low: 0,
   perDay_low: 0,
   perDay_high: 0,
   maxDay: 0,
@@ -62,13 +61,12 @@ const createEmptySuppositoriesEntry = (): SuppositoriesEntry => ({
 });
 
 const createEmptyOralDropsEntry = (): OralDropsEntry => ({
-  age_low: 0,
-  age_high: undefined,
+  w_low: 0,
   dos_low: 0,
-  dos_high: 0,
-  hoursInterval_low: 0,
-  hoursInterval_high: 0,
-  maxDay: 0
+  perDay_low: 0,
+  perDay_high: 0,
+  maxDay: 0,
+  maxDayPerKg: 0
 });
 
 const createEmptyInhalersEntry = (): InhalersEntry => ({
@@ -97,9 +95,11 @@ const createEmptySuspensionMedicine = (id: string): SuspensionMedicine => ({
   name: '',
   hebName: '',
   activeIngredient: '',
+  activeIngredients: [''],
   targetAudience: TargetAudience.Kids,
   prescriptionRequired: 'no',
   concentration: '',
+  concentrations: [''],
   entries: [createEmptySuspensionEntry()]
 });
 
@@ -109,6 +109,7 @@ const createEmptyCapletMedicine = (id: string): CapletMedicine => ({
   name: '',
   hebName: '',
   activeIngredient: '',
+  activeIngredients: [''],
   targetAudience: TargetAudience.Kids,
   prescriptionRequired: 'no',
   strength: '',
@@ -121,6 +122,7 @@ const createEmptyGranulesMedicine = (id: string): GranulesMedicine => ({
   name: '',
   hebName: '',
   activeIngredient: '',
+  activeIngredients: [''],
   targetAudience: TargetAudience.Kids,
   prescriptionRequired: 'no',
   strength: '',
@@ -133,6 +135,7 @@ const createEmptyCapsulesMedicine = (id: string): CapsulesMedicine => ({
   name: '',
   hebName: '',
   activeIngredient: '',
+  activeIngredients: [''],
   targetAudience: TargetAudience.Kids,
   prescriptionRequired: 'no',
   strength: '',
@@ -145,6 +148,7 @@ const createEmptySuppositoriesMedicine = (id: string): SuppositoriesMedicine => 
   name: '',
   hebName: '',
   activeIngredient: '',
+  activeIngredients: [''],
   targetAudience: TargetAudience.Kids,
   prescriptionRequired: 'no',
   strength: '',
@@ -157,6 +161,7 @@ const createEmptyOralDropsMedicine = (id: string): OralDropsMedicine => ({
   name: '',
   hebName: '',
   activeIngredient: '',
+  activeIngredients: [''],
   targetAudience: TargetAudience.Kids,
   prescriptionRequired: 'no',
   strength: '',
@@ -169,6 +174,7 @@ const createEmptyInhalersMedicine = (id: string): InhalersMedicine => ({
   name: '',
   hebName: '',
   activeIngredient: '',
+  activeIngredients: [''],
   targetAudience: TargetAudience.Kids,
   prescriptionRequired: 'no',
   strength: '',
@@ -181,6 +187,7 @@ const createEmptyOintmentsMedicine = (id: string): OintmentsMedicine => ({
   name: '',
   hebName: '',
   activeIngredient: '',
+  activeIngredients: [''],
   targetAudience: TargetAudience.Kids,
   prescriptionRequired: 'no',
   strength: '',
@@ -454,32 +461,66 @@ export const AddMedicineForm: React.FC<AddMedicineFormProps> = ({
               required
             />
 
-            <input
-              type="text"
-              name="activeIngredient"
-              placeholder={t('addMedicineForm.ingredientPlaceholder')}
-              value={formData.activeIngredient}
-              onChange={handleBasicInfoChange}
-              className="w-full p-2 border rounded"
-              required
-            />
+            {(formData.activeIngredients ?? [formData.activeIngredient]).map((ingredient, idx) => (
+              <div key={idx} className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder={t('addMedicineForm.ingredientPlaceholder')}
+                  value={ingredient}
+                  onChange={(e) => {
+                    const updated = [...(formData.activeIngredients ?? [formData.activeIngredient])];
+                    updated[idx] = e.target.value;
+                    setFormData(prev => ({ ...prev, activeIngredients: updated, activeIngredient: updated[0] }));
+                  }}
+                  className="flex-1 p-2 border rounded"
+                  required={idx === 0}
+                />
+                {idx > 0 && (
+                  <button type="button" onClick={() => {
+                    const updated = (formData.activeIngredients ?? []).filter((_, i) => i !== idx);
+                    setFormData(prev => ({ ...prev, activeIngredients: updated, activeIngredient: updated[0] ?? '' }));
+                  }} className="p-2 text-red-500 hover:text-red-700"><Minus size={16} /></button>
+                )}
+              </div>
+            ))}
+            <button type="button" onClick={() => setFormData(prev => ({ ...prev, activeIngredients: [...(prev.activeIngredients ?? [prev.activeIngredient]), ''] }))} className="text-sm text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
+              <Plus size={14} /> {t('addMedicineForm.addIngredient')}
+            </button>
 
             {formData.type === 'suspension' ? (
-              <input
-                type="text"
-                name="concentration"
-                placeholder={t('addMedicineForm.concentrationPlaceholder')}
-                value={formData.concentration}
-                onChange={handleBasicInfoChange}
-                className="w-full p-2 border rounded"
-                required
-              />
+              <>
+                {((formData as SuspensionMedicine).concentrations ?? [(formData as SuspensionMedicine).concentration]).map((conc, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder={t('addMedicineForm.concentrationPlaceholder')}
+                      value={conc}
+                      onChange={(e) => {
+                        const updated = [...((formData as SuspensionMedicine).concentrations ?? [(formData as SuspensionMedicine).concentration])];
+                        updated[idx] = e.target.value;
+                        setFormData(prev => ({ ...prev, concentrations: updated, concentration: updated[0] }));
+                      }}
+                      className="flex-1 p-2 border rounded"
+                      required={idx === 0}
+                    />
+                    {idx > 0 && (
+                      <button type="button" onClick={() => {
+                        const updated = ((formData as SuspensionMedicine).concentrations ?? []).filter((_, i) => i !== idx);
+                        setFormData(prev => ({ ...prev, concentrations: updated, concentration: updated[0] ?? '' }));
+                      }} className="p-2 text-red-500 hover:text-red-700"><Minus size={16} /></button>
+                    )}
+                  </div>
+                ))}
+                <button type="button" onClick={() => setFormData(prev => ({ ...prev, concentrations: [...((prev as SuspensionMedicine).concentrations ?? [(prev as SuspensionMedicine).concentration]), ''] }))} className="text-sm text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
+                  <Plus size={14} /> {t('addMedicineForm.addConcentration')}
+                </button>
+              </>
             ) : (  // for both formData.type === 'caplets' and 'granules'
               <input
                 type="text"
                 name="strength"
                 placeholder={t('addMedicineForm.strengthPlaceholder')}
-                value={formData.strength}
+                value={(formData as CapletMedicine).strength}
                 onChange={handleBasicInfoChange}
                 className="w-full p-2 border rounded"
                 required
@@ -511,7 +552,7 @@ export const AddMedicineForm: React.FC<AddMedicineFormProps> = ({
 
             {formData.entries.map((entry, index) => (
               <div key={index} className="p-4 border rounded space-y-4">
-                {formData.type === 'suspension' ? (
+                {(formData.type === 'suspension' || formData.type === 'oralDrops') ? (
                   <>
                     <div className="grid grid-cols-2 gap-4">
                       <input
@@ -528,17 +569,23 @@ export const AddMedicineForm: React.FC<AddMedicineFormProps> = ({
                         value={formData.entries[index].w_high || ''}
                         onChange={(e) => handleEntryChange(index, 'w_high', e.target.value)}
                         className="p-2 border rounded"
-                        required
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <input
                         type="number"
-                        placeholder={t('addMedicineForm.dosageMl')}
-                        value={formData.entries[index].dos || ''}
-                        onChange={(e) => handleEntryChange(index, 'dos', e.target.value)}
+                        placeholder={t(formData.type === 'oralDrops' ? 'addMedicineForm.dosageDrops' : 'addMedicineForm.dosageMl')}
+                        value={(formData.entries[index] as SuspensionEntry).dos_low || ''}
+                        onChange={(e) => handleEntryChange(index, 'dos_low', e.target.value)}
                         className="p-2 border rounded"
                         required
+                      />
+                      <input
+                        type="number"
+                        placeholder={t(formData.type === 'oralDrops' ? 'addMedicineForm.dosageDropsMax' : 'addMedicineForm.dosageMlMax')}
+                        value={(formData.entries[index] as SuspensionEntry).dos_high || ''}
+                        onChange={(e) => handleEntryChange(index, 'dos_high', e.target.value)}
+                        className="p-2 border rounded"
                       />
                       <div className="grid grid-cols-2 gap-2">
                         <input
@@ -559,6 +606,49 @@ export const AddMedicineForm: React.FC<AddMedicineFormProps> = ({
                         />
                       </div>
                     </div>
+                    {((formData.entries[index] as SuspensionEntry).formulaX !== undefined || (formData.entries[index] as SuspensionEntry).formulaY !== undefined) ? (
+                      <div className="space-y-2 p-3 bg-emerald-50 border border-emerald-200 rounded">
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="number"
+                            placeholder={t(formData.type === 'oralDrops' ? 'addMedicineForm.formulaXDrops' : 'addMedicineForm.formulaX')}
+                            value={(formData.entries[index] as SuspensionEntry).formulaX ?? ''}
+                            onChange={(e) => handleEntryChange(index, 'formulaX', e.target.value)}
+                            className="p-2 border rounded"
+                          />
+                          <input
+                            type="number"
+                            placeholder={t(formData.type === 'oralDrops' ? 'addMedicineForm.formulaYDrops' : 'addMedicineForm.formulaY')}
+                            value={(formData.entries[index] as SuspensionEntry).formulaY ?? ''}
+                            onChange={(e) => handleEntryChange(index, 'formulaY', e.target.value)}
+                            className="p-2 border rounded"
+                          />
+                        </div>
+                        {((formData.entries[index] as SuspensionEntry).formulaX || (formData.entries[index] as SuspensionEntry).formulaY) ? (
+                          <p className="text-sm text-emerald-700 font-medium">
+                            {t('addMedicineForm.formulaPreview')}: {(formData.entries[index] as SuspensionEntry).formulaX ?? '?'} {formData.type === 'oralDrops' ? 'טיפות' : 'מ"ל'} ל-{(formData.entries[index] as SuspensionEntry).formulaY ?? '?'} ק"ג ליום
+                          </p>
+                        ) : null}
+                        <button type="button" onClick={() => setFormData(prev => {
+                          const entries = [...prev.entries] as typeof prev.entries;
+                          const e = { ...entries[index] } as SuspensionEntry;
+                          delete e.formulaX;
+                          delete e.formulaY;
+                          (entries as SuspensionEntry[])[index] = e;
+                          return { ...prev, entries } as Medicine;
+                        })} className="text-xs text-red-500 hover:text-red-700">
+                          הסר נוסחה
+                        </button>
+                      </div>
+                    ) : (
+                      <button type="button" onClick={() => setFormData(prev => {
+                        const entries = [...prev.entries];
+                        (entries as SuspensionEntry[])[index] = { ...(entries[index] as SuspensionEntry), formulaX: 0, formulaY: 0 };
+                        return { ...prev, entries } as Medicine;
+                      })} className="text-sm text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
+                        <Plus size={14} /> {t('addMedicineForm.formulaAddToggle')}
+                      </button>
+                    )}
                   </>
                 ) : ( // for both formData.type === 'caplets' and 'granules'
                   <>

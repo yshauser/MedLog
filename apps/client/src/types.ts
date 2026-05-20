@@ -76,6 +76,7 @@ export interface MedicineBase {
   type: MedicineType;
   targetAudience: string;
   activeIngredient: string;
+  activeIngredients?: string[];
   hebName: string;
   prescriptionRequired?: 'yes' | 'no';
   aliases?: {
@@ -87,12 +88,15 @@ export interface MedicineBase {
 
 export interface SuspensionEntry {
   w_low: number;
-  w_high: number;
-  dos: number;
+  w_high?: number;
+  dos_low: number;
+  dos_high?: number;
   perDay_low: number;
   perDay_high: number;
   maxDay: number;
   maxDayPerKg: number;
+  formulaX?: number;
+  formulaY?: number;
 }
 
 export interface CapletEntry {
@@ -136,13 +140,16 @@ export interface SuppositoriesEntry {
 }
 
 export interface OralDropsEntry {
-  age_low: number;
-  age_high?: number;
+  w_low: number;
+  w_high?: number;
   dos_low: number;
-  dos_high: number;
-  hoursInterval_low: number;
-  hoursInterval_high: number;
+  dos_high?: number;
+  perDay_low: number;
+  perDay_high: number;
   maxDay: number;
+  maxDayPerKg: number;
+  formulaX?: number;
+  formulaY?: number;
 }
 
 export interface InhalersEntry {
@@ -168,6 +175,7 @@ export interface OintmentsEntry {
 export interface SuspensionMedicine extends MedicineBase {
   type: MedicineType.Suspension;
   concentration: string;
+  concentrations?: string[];
   entries: SuspensionEntry[];
 }
 
