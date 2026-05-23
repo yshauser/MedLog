@@ -266,14 +266,17 @@ export const LogPage: React.FC<LogPageProps> = ({ logData, setLogData }) => {
                             onChange={handleDateChange}
                             dateFormat="dd/MM/yy"
                             className="p-1 border rounded w-24 text-right"
+                            popperPlacement="bottom-start"
+                            popperModifiers={[
+                              { name: 'preventOverflow', options: { boundary: 'viewport', padding: 8 } },
+                              { name: 'flip', options: { fallbackPlacements: ['top-start', 'bottom-end', 'top-end'] } }
+                            ]}
                             />
                           <input
-                            type="text"
-                            className="p-1 border rounded w-16 text-right"
+                            type="time"
+                            className="p-1 border rounded w-24"
                             value={editedEntry?.logHour}
-                            // onChange={e => setEditedEntry(prev => prev ? { ...prev, logHour: e.target.value } : null)}
-                            onChange={e => handleHourChange(e.target.value)}
-                            placeholder='HH:mm'
+                            onChange={e => setEditedEntry(prev => prev ? { ...prev, logHour: e.target.value } : null)}
                           />
                         </div>
                       </td>
