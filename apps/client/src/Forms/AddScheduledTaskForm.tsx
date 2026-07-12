@@ -127,10 +127,13 @@ export const AddScheduledTaskForm: React.FC<AddScheduledTaskFormProps> = ({
               </label>
               <input
                 id="dose"
+                type="number"
+                step="any"
+                min="0"
                 className="w-full p-3 sm:p-2 border rounded"
                 placeholder="מינון"
                 value={formData.dose}
-                onChange={e => onTaskDataChange({ ...formData, dose: Number(e.target.value) || 0 })}
+                onChange={e => onTaskDataChange({ ...formData, dose: parseFloat(e.target.value) || 0 })}
               />
             </div>
             <div className="flex-1">
