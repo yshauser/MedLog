@@ -97,6 +97,7 @@ const TaskCalendar: React.FC<CalendarProps> = ({ task, onClose, onUpdateTask }) 
 //   const [selectedDates, setSelectedDates] = useState<DateTakesMap>({});
   const [takesHistory, setTakesHistory] = useState<DailyTakes[]>(task.takesHistory||[]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState<string>('');
 
   const startDate = new Date(timeAndDateFormatter.formatDateForCalc(task.taskStartDate));
@@ -120,9 +121,16 @@ const TaskCalendar: React.FC<CalendarProps> = ({ task, onClose, onUpdateTask }) 
             return;
         }
 
+        const existingTakes = getTakesFromDate(arg.dateStr);
+        const hasExistingTakes = existingTakes && existingTakes.some(t => t);
+
         if (task.timesPerDay > 1) {
             setCurrentDate(arg.dateStr);
-            setIsDialogOpen(true);
+            if (hasExistingTakes) {
+                setIsClearConfirmOpen(true);
+            } else {
+                setIsDialogOpen(true);
+            }
         } else {
             // Toggle single take for dates with timesPerDay = 1
             const existingTakesIndex = takesHistory.findIndex(record => record.date === arg.dateStr);
@@ -248,6 +256,41 @@ const TaskCalendar: React.FC<CalendarProps> = ({ task, onClose, onUpdateTask }) 
         existingTakes={getTakesFromDate(currentDate)}
         onConfirm={handleDialogConfirm}
       />
+      {isClearConfirmOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+            <p className="text-lg font-medium mb-4">להוריד סימון?</p>
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={async () => {
+                  setIsClearConfirmOpen(false);
+                  const newTakesHistory = takesHistory.filter(record => record.date !== currentDate);
+                  setTakesHistory(newTakesHistory);
+                  await saveTakesHistory(newTakesHistory);
+                }}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                כן
+              </button>
+              <button
+                onClick={() => {
+                  setIsClearConfirmOpen(false);
+                  setIsDialogOpen(true);
+                }}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                עריכה
+              </button>
+              <button
+                onClick={() => setIsClearConfirmOpen(false)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

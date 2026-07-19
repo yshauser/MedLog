@@ -141,12 +141,17 @@ const ScheduledPage = () => {
      console.log ('handle submit', {startDate, endDate}, formData.taskDays)
     const familyId = user?.familyId || '';
     if (taskToEdit) {
+      const filteredTakesHistory = (taskToEdit.takesHistory || []).filter(record => {
+        const d = new Date(record.date);
+        return d >= startDate && d <= endDate;
+      });
       const updatedTask: TaskEntry = {
         ...formData,
         familyId: taskToEdit.familyId || familyId,
         id: taskToEdit.id,
         taskStartDate: timeAndDateFormatter.formatDateForUI(startDate.toString()),
-        taskEndDate: timeAndDateFormatter.formatDateForUI(endDate.toString())
+        taskEndDate: timeAndDateFormatter.formatDateForUI(endDate.toString()),
+        takesHistory: filteredTakesHistory
       };
       await updateTaskDoc(taskToEdit.id, updatedTask);
       setTasks(prev => prev.map(task =>
